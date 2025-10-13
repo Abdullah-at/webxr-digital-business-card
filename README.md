@@ -1,2 +1,3 @@
-# webxr-digital-business-card
+# WebXR Digital Business Card
 
+Local project repository — first setup.
