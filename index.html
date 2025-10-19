@@ -7,6 +7,15 @@
     <!-- A-Frame -->
     <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <script>
+     const hud = document.getElementById('hud');
+     hud.style.display = 'none';
+
+     // MindAR dispatches these on the target entity
+     const root = document.getElementById('markerRoot');
+     root.addEventListener('targetFound',  () => hud.style.display = 'block');
+     root.addEventListener('targetLost',   () => hud.style.display = 'none');
+    </script>
 
   </head>
   <body>
@@ -26,13 +35,31 @@
     </div>
   </div>
 
-  <!-- A-Frame scene (transparent background, no demo objects) -->
-  <a-scene renderer="alpha: true; colorManagement: true" embedded>
-    <!-- camera ready; add AR tracking later -->
-    <a-entity position="0 1.6 0">
-      <a-camera wasd-controls-enabled="false"></a-camera>
-    </a-entity>
-  </a-scene>
+ <!-- Ask for camera, run tracking from the .mind file -->
+<a-scene
+  mindar-image="imageTargetSrc: /targets.mind; filterMinCF: 0.001; filterBeta: 0; missTolerance: 30"
+  vr-mode-ui="enabled: false"
+  device-orientation-permission-ui="enabled: true"
+  renderer="alpha: true; colorManagement: true"
+  embedded
+>
+  <a-assets>
+    <!-- your 3D model(s) go here -->
+    <!-- <a-asset-item id="meModel" src="/me.glb"></a-asset-item> -->
+  </a-assets>
+
+  <!-- MindAR camera (required) -->
+  <a-camera look-controls="enabled: false"></a-camera>
+
+  <!-- Content that appears when target 0 is tracked -->
+  <a-entity mindar-image-target="targetIndex: 0" id="markerRoot">
+    <!-- Example: place your character here -->
+    <!-- <a-entity gltf-model="#meModel" position="0 0 0" scale="0.5 0.5 0.5" animation-mixer></a-entity> -->
+
+    <!-- Your 3D buttons could also live here as planes or as HTML overlay (see below) -->
+  </a-entity>
+</a-scene>
+
 
   <script type="module" src="/src/main.js"></script>
 
