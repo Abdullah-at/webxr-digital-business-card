@@ -4,97 +4,63 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>WebXR Digital Business Card</title>
-    <!-- A-Frame -->
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="/style.css" />
+
+    <!-- A-Frame + MindAR -->
     <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-    <script>
-     const hud = document.getElementById('hud');
-     hud.style.display = 'none';
-
-     // MindAR dispatches these on the target entity
-     const root = document.getElementById('markerRoot');
-     root.addEventListener('targetFound',  () => hud.style.display = 'block');
-     root.addEventListener('targetLost',   () => hud.style.display = 'none');
-    </script>
-
   </head>
+
   <body>
-  <!-- Glass / blur HUD panel (HTML overlay) -->
-  <div id="hud">
-    <div class="step">
-      <span class="badge">1</span>
-      <button class="pill" id="btn-1">Text 1</button>
+    <!-- HTML HUD (hidden until targetFound) -->
+    <div id="hud" class="">
+      <div class="step">
+        <span class="badge">1</span>
+        <button class="pill" id="btn-1">Text 1</button>
+      </div>
+      <div class="step">
+        <span class="badge">2</span>
+        <button class="pill" id="btn-2">Text 2</button>
+      </div>
+      <div class="step">
+        <span class="badge">3</span>
+        <button class="pill" id="btn-3">Text 3</button>
+      </div>
     </div>
-    <div class="step">
-      <span class="badge">2</span>
-      <button class="pill" id="btn-2">Text 2</button>
-    </div>
-    <div class="step">
-      <span class="badge">3</span>
-      <button class="pill" id="btn-3">Text 3</button>
-    </div>
-  </div>
 
- <!-- Ask for camera, run tracking from the .mind file -->
-<a-scene
-  mindar-image="imageTargetSrc: /targets.mind; filterMinCF: 0.001; filterBeta: 0; missTolerance: 30"
-  vr-mode-ui="enabled: false"
-  device-orientation-permission-ui="enabled: true"
-  renderer="alpha: true; colorManagement: true"
-  embedded
->
-  <a-assets>
-    <!-- your 3D model(s) go here -->
-    <!-- <a-asset-item id="meModel" src="/me.glb"></a-asset-item> -->
-  </a-assets>
+    <!-- WebAR scene -->
+    <a-scene
+      mindar-image="imageTargetSrc: /targets.mind?v=2; filterMinCF: 0.001; filterBeta: 0; missTolerance: 30"
+      device-orientation-permission-ui="enabled: true"
+      vr-mode-ui="enabled: false"
+      renderer="alpha: true; colorManagement: true"
+      embedded
+    >
+      <a-assets>
+        <!-- preload 3D/other assets here -->
+        <!-- <a-asset-item id="meModel" src="/me.glb"></a-asset-item> -->
+      </a-assets>
 
-  <!-- MindAR camera (required) -->
-  <a-camera look-controls="enabled: false"></a-camera>
+      <!-- MindAR camera (required) -->
+      <a-camera look-controls="enabled: false"></a-camera>
 
-  <!-- Content that appears when target 0 is tracked -->
-  <a-entity mindar-image-target="targetIndex: 0" id="markerRoot">
-    <!-- Example: place your character here -->
-    <!-- <a-entity gltf-model="#meModel" position="0 0 0" scale="0.5 0.5 0.5" animation-mixer></a-entity> -->
+      <!-- Everything under this entity appears when targetIndex 0 is tracked -->
+      <a-entity mindar-image-target="targetIndex: 0" id="markerRoot">
+        <!-- sanity-check object: remove once working -->
+        <a-box position="0 0 0" depth="0.12" height="0.12" width="0.12"
+               color="#4CC3D9"
+               animation="property: rotation; to: 0 360 0; loop: true; dur: 3000">
+        </a-box>
 
-    <!-- Your 3D buttons could also live here as planes or as HTML overlay (see below) -->
-  </a-entity>
-</a-scene>
+        <!-- Example for later:
+        <a-entity gltf-model="#meModel" position="0 0 0" scale="0.5 0.5 0.5" animation-mixer></a-entity>
+        -->
+      </a-entity>
+    </a-scene>
 
-
-  <script type="module" src="/src/main.js"></script>
-
-  <style>
-    /* Glass HUD */
-    #hud{
-      position:fixed; inset:auto 16px 16px auto;  /* bottom-right; move as you like */
-      width:320px; padding:16px 18px;
-      border-radius:22px;
-      background:rgba(255,255,255,.12);
-      backdrop-filter: blur(12px) saturate(130%);
-      -webkit-backdrop-filter: blur(12px) saturate(130%);
-      border:1px solid rgba(255,255,255,.25);
-      box-shadow: 0 10px 30px rgba(0,0,0,.25);
-      color:#fff; font:14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    }
-    .step{ display:flex; align-items:center; gap:12px; margin:12px 0; }
-    .badge{
-      display:inline-grid; place-items:center;
-      width:36px; height:36px; border-radius:10px;
-      background:#f49c2f; color:#fff; font-weight:700;
-      box-shadow: inset 0 0 0 2px rgba(255,255,255,.4);
-    }
-    .pill{
-      flex:1; height:42px; padding:0 16px;
-      border-radius:14px; border:1.5px solid rgba(255,255,255,.35);
-      background:rgba(0,0,0,.25); color:#fff;
-      cursor:pointer; transition: transform .08s ease, background .15s ease;
-    }
-    .pill:hover{ transform: translateY(-1px); background:rgba(255,255,255,.12); }
-    .pill:active{ transform: translateY(0); }
-    /* Make the page behind fully transparent (helps for AR compositing later) */
-    html,body{ background: transparent; height:100%; margin:0; overflow:hidden; }
-    a-scene{ position:fixed; inset:0; }
-  </style>
-</body>
-
+    <!-- Your app logic -->
+    <script type="module" src="/src/main.js"></script>
+  </body>
 </html>
