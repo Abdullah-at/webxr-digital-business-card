@@ -9,9 +9,9 @@ import tri4URL     from './assets/Triangles4.png'; // ensure this exists exactly
 // ---------- Alignment knobs (tune these 3 values if overlay is slightly off) ----------
 const FIT = {
   width:  1.000,   // 1.000 = exact target width; bump to e.g. 1.012 if you need +1.2%
-  height: 0.600,   // keep aspect near 1:0.6 (adjust a hair if needed, e.g. 0.606)
-  x: 0.000,        // tiny horizontal nudge in meters (e.g. 0.002)
-  y: 0.000         // tiny vertical nudge (e.g. -0.001)
+  height: 0.650,   // keep aspect near 1:0.6 (adjust a hair if needed, e.g. 0.606)
+  x: 0.002,        // tiny horizontal nudge in meters (e.g. 0.002)
+  y: 0.001         // tiny vertical nudge (e.g. -0.001)
 };
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -54,6 +54,17 @@ window.addEventListener('DOMContentLoaded', () => {
   t3.setAttribute('src',   tri3URL);
   t4.setAttribute('src',   tri4URL);
 
+const layers = [base, text, t1, t2, t3, t4];
+
+// keep all layers same size/xy as base
+const syncLayers = () => {
+  layers.forEach((el, i) => {
+    const z = (i === 0) ? 0.000 : 0.001 + (i - 1) * 0.001; // keep your stacking
+    el.setAttribute('width',  String(FIT.width));
+    el.setAttribute('height', String(FIT.height));
+    el.setAttribute('position', `${FIT.x} ${FIT.y} ${z}`);
+  });
+};
   // Modest starting opacity so pulse has headroom
   [t1, t2, t3, t4].forEach(el => el.setAttribute('opacity', '0.5'));
 

@@ -28,7 +28,7 @@ video {
   position: fixed !important;
   inset: 0 !important;          /* top/right/bottom/left = 0 */
   width: 100vw !important;
-  height: 160svh !important;    /* iOS toolbar-safe height */
+  height: 100svh !important;    /* iOS toolbar-safe height */
   max-width: none !important;
   max-height: none !important;
   object-fit: cover !important;
