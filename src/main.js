@@ -1,36 +1,49 @@
-// ---------- Asset imports (match exact filenames in /src/assets) ----------
+// ---------- Asset imports ----------
 import cardBaseURL from './assets/Card_Base.png';
 import cardTextURL from './assets/Card_Text.png';
 import tri1URL     from './assets/Triangles1.png';
 import tri2URL     from './assets/Triangles2.png';
 import tri3URL     from './assets/Triangles3.png';
-import tri4URL     from './assets/Triangles4.png'; // ensure this exists exactly
+import tri4URL     from './assets/Triangles4.png';
 
-// ---------- Alignment knobs (tune these 3 values if overlay is slightly off) ----------
-const FIT = {
-  width:  1.000,   // 1.000 = exact target width; bump to e.g. 1.012 if you need +1.2%
-  height: 0.780,   // keep aspect near 1:0.6 (adjust a hair if needed, e.g. 0.606)
-  x: 0.002,        // tiny horizontal nudge in meters (e.g. 0.002)
-  y: 0.001         // tiny vertical nudge (e.g. -0.001)
-};
+// Loader media (put your files in /src/assets and rename here)
+import loaderWebmURL from './assets/loader.webm';
+
+// ---------- Alignment knobs ----------
+const FIT = { width: 1.000, height: 0.780, x: 0.000, y: 0.000 };
 
 window.addEventListener('DOMContentLoaded', () => {
   const hud        = document.getElementById('hud');
+  const loader     = document.getElementById('loader');
+  const loaderVid  = document.getElementById('loaderVid');
+  const loaderGif  = document.getElementById('loaderGif');
   const markerRoot = document.getElementById('markerRoot');
   if (!markerRoot) return;
 
-  // Show HUD only while tracked
-  markerRoot.addEventListener('targetFound', () => hud && hud.classList.add('active'));
-  markerRoot.addEventListener('targetLost',  () => hud && hud.classList.remove('active'));
+  // --- pick WebM if the browser supports it, else GIF ---
+  const canWebm = (() => {
+    const v = document.createElement('video');
+    return !!v.canPlayType && v.canPlayType('video/webm; codecs="vp9,opus"');
+  })();
+  if (canWebm) {
+    loaderVid.src = loaderWebmURL;
+    loaderVid.style.display = 'block';
+    loaderGif.style.display = 'none';
+  } else {
+    loaderGif.src = loaderGifURL;
+    loaderGif.style.display = 'block';
+    loaderVid.style.display = 'none';
+  }
+  const showLoader = (on=true) => loader?.classList.toggle('show', on);
 
-  // Helper: create an a-image with correct material + size
+  // --- HUD show/hide while tracked ---
+  markerRoot.addEventListener('targetFound', () => hud?.classList.add('active'));
+  markerRoot.addEventListener('targetLost',  () => hud?.classList.remove('active'));
+
+  // --- layers helper ---
   const makeLayer = (id, z) => {
     let el = document.getElementById(id);
-    if (!el) {
-      el = document.createElement('a-image');
-      el.id = id;
-      markerRoot.appendChild(el);
-    }
+    if (!el) { el = document.createElement('a-image'); el.id = id; markerRoot.appendChild(el); }
     el.setAttribute('width',  String(FIT.width));
     el.setAttribute('height', String(FIT.height));
     el.setAttribute('position', `${FIT.x} ${FIT.y} ${z}`);
@@ -38,7 +51,6 @@ window.addEventListener('DOMContentLoaded', () => {
     return el;
   };
 
-  // Layers: base on target, others slightly above for stacking
   const base = makeLayer('cardBase', 0.000);
   const text = makeLayer('cardText', 0.001);
   const t1   = makeLayer('tri1',     0.002);
@@ -46,73 +58,88 @@ window.addEventListener('DOMContentLoaded', () => {
   const t3   = makeLayer('tri3',     0.004);
   const t4   = makeLayer('tri4',     0.005);
 
-  // Textures (Vite resolves to URLs)
-  base.setAttribute('src', cardBaseURL);
-  text.setAttribute('src', cardTextURL);
-  t1.setAttribute('src',   tri1URL);
-  t2.setAttribute('src',   tri2URL);
-  t3.setAttribute('src',   tri3URL);
-  t4.setAttribute('src',   tri4URL);
+  // --- preload images, then set srcs ---
+  const loadImage = url => new Promise((res, rej) => { const i = new Image(); i.onload = res; i.onerror = rej; i.src = url; });
+  const assetURLs = [cardBaseURL, cardTextURL, tri1URL, tri2URL, tri3URL, tri4URL];
 
-const layers = [base, text, t1, t2, t3, t4];
+  let assetsReady = false;
+  let trackingReady = false;
 
-// keep all layers same size/xy as base
-const syncLayers = () => {
-  layers.forEach((el, i) => {
-    const z = (i === 0) ? 0.000 : 0.001 + (i - 1) * 0.001; // keep your stacking
-    el.setAttribute('width',  String(FIT.width));
-    el.setAttribute('height', String(FIT.height));
-    el.setAttribute('position', `${FIT.x} ${FIT.y} ${z}`);
-  });
-};
-  // Modest starting opacity so pulse has headroom
-  [t1, t2, t3, t4].forEach(el => el.setAttribute('opacity', '0.5'));
+  const maybeHideLoader = () => {
+    if (assetsReady && trackingReady) showLoader(false);
+  };
 
-  // ----- Animations (event-driven; works great on mobile Safari) -----
+  showLoader(true); // show immediately
 
-  // Fade the text when we emit 'start-fade'
+  Promise.all(assetURLs.map(loadImage))
+    .then(() => {
+      // set textures after preloading (prevents white flashes)
+      base.setAttribute('src', cardBaseURL);
+      text.setAttribute('src', cardTextURL);
+      t1.setAttribute('src',   tri1URL);
+      t2.setAttribute('src',   tri2URL);
+      t3.setAttribute('src',   tri3URL);
+      t4.setAttribute('src',   tri4URL);
+      assetsReady = true;
+      maybeHideLoader();
+    })
+    .catch(() => {
+      // even if one fails, proceed (but keep loader until targetFound)
+      base.setAttribute('src', cardBaseURL);
+      text.setAttribute('src', cardTextURL);
+      t1.setAttribute('src',   tri1URL);
+      t2.setAttribute('src',   tri2URL);
+      t3.setAttribute('src',   tri3URL);
+      t4.setAttribute('src',   tri4URL);
+      assetsReady = true;
+      maybeHideLoader();
+    });
+
+  // --- animations (event-driven; Safari-friendly) ---
+  [t1,t2,t3,t4].forEach(el => el.setAttribute('opacity','0.5'));
+
   text.setAttribute(
     'animation__fade',
     'property: material.opacity; from: 1; to: 0; dur: 1200; easing: easeInOutQuad; startEvents: start-fade'
   );
 
-  // Triangle pulsing; start on 'pulse-start', pause on 'pulse-stop'
-  const addPulse = (el, name, delay) => {
+  const pulse = (el, name, delay) => {
     el.setAttribute(
       `animation__${name}`,
       `property: material.opacity; from: 0.25; to: 1; dir: alternate; loop: true; dur: 900; easing: easeInOutSine; delay: ${delay}; startEvents: pulse-start; pauseEvents: pulse-stop`
     );
   };
-  addPulse(t1, 'p1',   0);
-  addPulse(t2, 'p2', 200);
-  addPulse(t3, 'p3', 400);
-  addPulse(t4, 'p4', 600);
+  pulse(t1, 'p1',   0);
+  pulse(t2, 'p2', 200);
+  pulse(t3, 'p3', 400);
+  pulse(t4, 'p4', 600);
 
-  // ----- Sequence control (per detection cycle) -----
+  // --- sequence per detection ---
   let fadeTimer = null;
 
   const startSequence = () => {
-    // ensure perfect overlay each time
+    trackingReady = true;
+    maybeHideLoader();
+
     text.setAttribute('material', 'opacity:1');
+    [t1,t2,t3,t4].forEach(el => el.emit('pulse-start'));
 
-    // start triangle pulses
-    [t1, t2, t3, t4].forEach(el => el.emit('pulse-start'));
-
-    // fade text after 10s (so digital card hides real printed text)
     if (fadeTimer) clearTimeout(fadeTimer);
     fadeTimer = setTimeout(() => text.emit('start-fade'), 10000);
   };
 
   const stopSequence = () => {
+    trackingReady = false;
+    showLoader(true); // show loader while target is lost (optional; remove if you prefer)
     if (fadeTimer) { clearTimeout(fadeTimer); fadeTimer = null; }
-    [t1, t2, t3, t4].forEach(el => el.emit('pulse-stop'));
-    text.setAttribute('material', 'opacity:1'); // ready for the next lock
+    [t1,t2,t3,t4].forEach(el => el.emit('pulse-stop'));
+    text.setAttribute('material', 'opacity:1');
   };
 
   markerRoot.addEventListener('targetFound', startSequence);
   markerRoot.addEventListener('targetLost',  stopSequence);
 
-  // Optional HUD buttons (keep/remove as you like)
+  // HUD buttons (optional)
   document.getElementById('btn-1')?.addEventListener('click', () => console.log('Text 1'));
   document.getElementById('btn-2')?.addEventListener('click', () => console.log('Text 2'));
   document.getElementById('btn-3')?.addEventListener('click', () => console.log('Text 3'));

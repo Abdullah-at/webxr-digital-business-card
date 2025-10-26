@@ -30,6 +30,12 @@
       </div>
     </div>
 
+     <div id="loader" class="show">
+       <video id="loaderVid" muted playsinline webkit-playsinline loop autoplay></video>
+      <img id="loaderGif" alt="loading" />
+      <p>Loading…</p>
+     </div>
+
     <!-- WebAR scene -->
     <a-scene
       mindar-image="imageTargetSrc: /targets.mind?v=2; filterMinCF: 0.001; filterBeta: 0; missTolerance: 30"
@@ -65,7 +71,7 @@
           opacity="1">
 </a-image>
 <!-- thin outline to visualize target bounds -->
- 
+
     </a-scene>  
 
     <!-- Your app logic -->
