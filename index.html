@@ -14,63 +14,30 @@
   </head>
 
   <body>
-    <!-- HTML HUD (hidden until targetFound) -->
-    <div id="hud" class="">
-      <div class="step">
-        <span class="badge">1</span>
-        <button class="pill" id="btn-1">Text 1</button>
-      </div>
-      <div class="step">
-        <span class="badge">2</span>
-        <button class="pill" id="btn-2">Text 2</button>
-      </div>
-      <div class="step">
-        <span class="badge">3</span>
-        <button class="pill" id="btn-3">Text 3</button>
-      </div>
+    <!-- HUD -->
+    <div id="hud">
+      <div class="step"><span class="badge">1</span><button class="pill" id="btn-1">Text 1</button></div>
+      <div class="step"><span class="badge">2</span><button class="pill" id="btn-2">Text 2</button></div>
+      <div class="step"><span class="badge">3</span><button class="pill" id="btn-3">Text 3</button></div>
     </div>
 
     <!-- WebAR scene -->
     <a-scene
-      mindar-image="imageTargetSrc: /targets.mind?v=2; filterMinCF: 0.001; filterBeta: 0; missTolerance: 30"
+      mindar-image="imageTargetSrc: ./targets.mind; filterMinCF: 0.001; filterBeta: 0; missTolerance: 30"
       device-orientation-permission-ui="enabled: true"
       vr-mode-ui="enabled: false"
       renderer="alpha: true; colorManagement: true"
-      embedded
-    >
-      <a-assets>
-        <!-- preload 3D/other assets here -->
-        <!-- <a-asset-item id="meModel" src="/me.glb"></a-asset-item> -->
-      </a-assets>
-
-      <!-- MindAR camera (required) -->
+      embedded>
+      <!-- MindAR camera -->
       <a-camera look-controls="enabled: false"></a-camera>
 
-      <!-- Everything under this entity appears when targetIndex 0 is tracked -->
+      <!-- Content locked to first image target -->
       <a-entity mindar-image-target="targetIndex: 0" id="markerRoot">
-        <!-- Digital business card -->
-<a-image id="cardBase"
-          src="./assets/Card_Base.png"
-          width="1"
-          height="0.6"
-          position="0 0 0">
-</a-image>
+        <!-- layers are created by main.js -->
+      </a-entity>
+    </a-scene>
 
-<!-- Text layer -->
-<a-image id="cardText"
-          src="./assets/Card_Text.png"
-          width="1"
-          height="0.6"
-          position="0 0 0.001"
-          opacity="1">
-</a-image>
-<!-- thin outline to visualize target bounds -->
-<a-plane position="0 0 0.000" width="1" height="0.6"
-        material="color:#00ff88; wireframe:true; transparent:true; opacity:0.6"></a-plane>
-
-    </a-scene>  
-
-    <!-- Your app logic -->
+    <!-- App -->
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
