@@ -105,3 +105,4 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-2')?.addEventListener('click', () => console.log('Text 2'));
   document.getElementById('btn-3')?.addEventListener('click', () => console.log('Text 3'));
 });
+    
