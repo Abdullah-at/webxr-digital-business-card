@@ -9,7 +9,7 @@ import tri4URL     from './assets/Triangles4.png'; // ensure this exists exactly
 // ---------- Alignment knobs (tune these 3 values if overlay is slightly off) ----------
 const FIT = {
   width:  1.000,   // 1.000 = exact target width; bump to e.g. 1.012 if you need +1.2%
-  height: 0.650,   // keep aspect near 1:0.6 (adjust a hair if needed, e.g. 0.606)
+  height: 0.750,   // keep aspect near 1:0.6 (adjust a hair if needed, e.g. 0.606)
   x: 0.002,        // tiny horizontal nudge in meters (e.g. 0.002)
   y: 0.001         // tiny vertical nudge (e.g. -0.001)
 };
