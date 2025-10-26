@@ -48,16 +48,22 @@
 
       <!-- Everything under this entity appears when targetIndex 0 is tracked -->
       <a-entity mindar-image-target="targetIndex: 0" id="markerRoot">
-        <!-- sanity-check object: remove once working -->
-        <a-box position="0 0 0" depth="0.12" height="0.12" width="0.12"
-               color="#4CC3D9"
-               animation="property: rotation; to: 0 360 0; loop: true; dur: 3000">
-        </a-box>
+        <!-- Digital business card -->
+<a-image id="cardBase"
+          src="./assets/Card_Base.png"
+          width="1"
+          height="0.6"
+          position="0 0 0">
+</a-image>
 
-        <!-- Example for later:
-        <a-entity gltf-model="#meModel" position="0 0 0" scale="0.5 0.5 0.5" animation-mixer></a-entity>
-        -->
-      </a-entity>
+<!-- Text layer -->
+<a-image id="cardText"
+          src="./assets/Card_Text.png"
+          width="1"
+          height="0.6"
+          position="0 0 0.001"
+          opacity="1">
+</a-image>
     </a-scene>  
 
     <!-- Your app logic -->
