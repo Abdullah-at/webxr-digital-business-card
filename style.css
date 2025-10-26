@@ -21,17 +21,23 @@ a-scene {
 }
 
 /* Force underlying A-Frame video + canvas layers to fill screen (no white half) */
+/* Force camera feed to fill the screen with no gaps */
 canvas,
 .a-canvas,
 video {
   position: fixed !important;
-  top: 0;
-  left: 0;
+  inset: 0 !important;          /* top/right/bottom/left = 0 */
   width: 100vw !important;
-  height: 100svh !important;
-  object-fit: cover;
-  background: transparent !important;
+  height: 100svh !important;    /* iOS toolbar-safe height */
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: cover !important;
+  background: #0000 !important; /* transparent */
 }
+
+/* Also ensure the page itself can’t scroll a single pixel */
+:root, html, body { overflow: hidden; width: 100vw; }
+
 
 /* Sharper 2D PNG rendering (avoids blur) */
 a-image {
