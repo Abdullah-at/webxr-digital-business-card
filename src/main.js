@@ -1,108 +1,98 @@
-// src/main.js
+// --- Exact filenames (match your /src/assets names) ---
 import cardBaseURL from './assets/Card_Base.png';
 import cardTextURL from './assets/Card_Text.png';
 import tri1URL from './assets/Triangles1.png';
 import tri2URL from './assets/Triangles2.png';
 import tri3URL from './assets/Triangles3.png';
-import tri4URL from './assets/Triangles4.png';
+import tri4URL from './assets/Triangles4.png'; // <- ensure this file really exists
 
 window.addEventListener('DOMContentLoaded', () => {
   const hud = document.getElementById('hud');
   const markerRoot = document.getElementById('markerRoot');
+  if (!markerRoot) return;
 
-  // safety: exit if markerRoot missing
-  if (!markerRoot) {
-    console.error('markerRoot not found!');
-    return;
-  }
-
-  // --- HUD wiring (you had this) ---
+  // Show HUD only while tracked
   markerRoot.addEventListener('targetFound', () => hud?.classList.add('active'));
   markerRoot.addEventListener('targetLost',  () => hud?.classList.remove('active'));
 
-  // helper: create a-image if missing
-  const ensureImage = (id, z = 0.0, w = 1, h = 0.6) => {
+  // Helper: create an a-image layer with correct material
+  const layer = (id, z) => {
     let el = document.getElementById(id);
     if (!el) {
       el = document.createElement('a-image');
-      el.setAttribute('id', id);
-      el.setAttribute('width', String(w));
-      el.setAttribute('height', String(h));
-      // put it exactly on the target; small offsets in z to layering
+      el.id = id;
+      el.setAttribute('width',  '1');   // match target aspect 1000x600 -> 1 : 0.6
+      el.setAttribute('height', '0.6');
       el.setAttribute('position', `0 0 ${z}`);
-      // ensure transparent pixels of PNG stay transparent
-      el.setAttribute('material', 'transparent: true; alphaTest: 0.01; side: double');
+      el.setAttribute('material', 'transparent:true; alphaTest:0.01; side:double; opacity:1');
       markerRoot.appendChild(el);
     }
     return el;
   };
 
-  const cardBase = ensureImage('cardBase', 0.000, 1.0, 0.6);
-  const cardText = ensureImage('cardText', 0.001, 1.0, 0.6);
-  const tri1     = ensureImage('tri1', 0.002, 1.0, 0.6);
-  const tri2     = ensureImage('tri2', 0.003, 1.0, 0.6);
-  const tri3     = ensureImage('tri3', 0.004, 1.0, 0.6);
-  const tri4     = ensureImage('tri4', 0.005, 1.0, 0.6);
+  // Layers (base exactly on target, others slightly above)
+  const base = layer('cardBase', 0.000);
+  const text = layer('cardText', 0.001);
+  const t1   = layer('tri1',     0.002);
+  const t2   = layer('tri2',     0.003);
+  const t3   = layer('tri3',     0.004);
+  const t4   = layer('tri4',     0.005);
 
-  // set textures (Vite gives URLs)
-  cardBase.setAttribute('src', cardBaseURL);
-  cardText.setAttribute('src', cardTextURL);
-  tri1.setAttribute('src', tri1URL);
-  tri2.setAttribute('src', tri2URL);
-  tri3.setAttribute('src', tri3URL);
-  tri4.setAttribute('src', tri4URL);
+  // Textures
+  base.setAttribute('src', cardBaseURL);
+  text.setAttribute('src', cardTextURL);
+  t1.setAttribute('src',   tri1URL);
+  t2.setAttribute('src',   tri2URL);
+  t3.setAttribute('src',   tri3URL);
+  t4.setAttribute('src',   tri4URL);
 
-  // default tri opacity so pulses are visible
-  [tri1,tri2,tri3,tri4].forEach(t => t.setAttribute('opacity', '0.5'));
+  // Start with modest opacity so pulse is visible
+  [t1,t2,t3,t4].forEach(el => el.setAttribute('opacity','0.5'));
 
-  // Define pulse animation (string syntax - reliable cross-browser)
-  const addPulseAnimation = (el, idSuffix, delayMs) => {
-    // animated opacity from 0.25 -> 1
-    el.setAttribute(
-      `animation__pulse${idSuffix}`,
-      `property: material.opacity; from: 0.25; to: 1.0; dur: 900; easing: easeInOutSine; loop: true; dir: alternate; delay: ${delayMs}; enabled: false`
-    );
-  };
-
-  addPulseAnimation(tri1, 'a', 0);
-  addPulseAnimation(tri2, 'b', 200);
-  addPulseAnimation(tri3, 'c', 400);
-  addPulseAnimation(tri4, 'd', 600);
-
-  // Fade animation for cardText (string syntax)
-  cardText.setAttribute(
-    'animation__fade',
-    'property: material.opacity; to: 0; dur: 1500; easing: easeInOutQuad; enabled: false'
+  // ---- Animations (event driven; very Safari-friendly) ----
+  // Fade text when we emit 'start-fade', reset when 'reset-fade'
+  text.setAttribute('animation__fade',
+    'property: material.opacity; from: 1; to: 0; dur: 1200; easing: easeInOutQuad; startEvents: start-fade'
   );
 
+  // Triangle pulses; start on 'pulse-start', pause on 'pulse-stop'
+  const addPulse = (el, name, delay) => {
+    el.setAttribute(`animation__${name}`,
+      `property: material.opacity; from: 0.25; to: 1; dir: alternate; loop: true; dur: 900; easing: easeInOutSine; delay: ${delay}; startEvents: pulse-start; pauseEvents: pulse-stop`
+    );
+  };
+  addPulse(t1, 'p1',   0);
+  addPulse(t2, 'p2', 200);
+  addPulse(t3, 'p3', 400);
+  addPulse(t4, 'p4', 600);
+
+  // ---- Sequence control ----
   let fadeTimer = null;
+
   const startSequence = () => {
-    // show text immediately when found
-    cardText.setAttribute('material', 'opacity: 1');
+    // full overlay each time we re-acquire target
+    text.setAttribute('material', 'opacity:1');
 
-    // enable pulses
-    [tri1,tri2,tri3,tri4].forEach(t => t.setAttribute(`animation__pulse${t.id.slice(-1)}`, 'enabled: true'));
+    // start pulses
+    [t1,t2,t3,t4].forEach(el => el.emit('pulse-start'));
 
-    // schedule fade after 10s
+    // schedule text fade after 10s (so digital card covers real text)
     if (fadeTimer) clearTimeout(fadeTimer);
-    fadeTimer = setTimeout(() => {
-      cardText.setAttribute('animation__fade', 'enabled: true');
-    }, 10000);
+    fadeTimer = setTimeout(() => text.emit('start-fade'), 10000);
   };
 
   const stopSequence = () => {
     if (fadeTimer) { clearTimeout(fadeTimer); fadeTimer = null; }
-    // disable pulses & fade (so it restarts clean next time)
-    [tri1,tri2,tri3,tri4].forEach(t => t.setAttribute(`animation__pulse${t.id.slice(-1)}`, 'enabled: false'));
-    cardText.setAttribute('animation__fade', 'enabled: false');
+    [t1,t2,t3,t4].forEach(el => el.emit('pulse-stop'));
+    // ensure text will be visible again on next detection
+    text.setAttribute('material', 'opacity:1');
   };
 
   markerRoot.addEventListener('targetFound', startSequence);
   markerRoot.addEventListener('targetLost',  stopSequence);
 
-  // buttons (optional)
+  // (Optional) Your HUD buttons
   document.getElementById('btn-1')?.addEventListener('click', () => console.log('Text 1'));
   document.getElementById('btn-2')?.addEventListener('click', () => console.log('Text 2'));
   document.getElementById('btn-3')?.addEventListener('click', () => console.log('Text 3'));
 });
-    

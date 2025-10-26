@@ -1,14 +1,114 @@
-/* keep your existing styles; add the following small tweaks */
+/* ----------------------------
+   GLOBAL + A-FRAME CANVAS
+---------------------------- */
 
-/* On iOS, avoid accidental pull-to-zoom gestures over the canvas */
-html, body, a-scene { touch-action: none; }
+/* Transparent background, full-height layout on all browsers */
+html, body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  height: 100svh;                /* “small viewport” height fixes iOS Safari toolbar jump */
+  overflow: hidden;
+  touch-action: none;            /* prevents pinch-zoom / pull gestures over AR canvas */
+}
 
-/* (Optional) feel a bit crisper for 2D PNGs */
-a-image { image-rendering: auto; }
+/* Scene fills entire viewport (video + camera) */
+a-scene {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100svh;
+}
 
-/* Safe-area breathing room if your HUD sits near edges */
+/* Force underlying A-Frame video + canvas layers to fill screen (no white half) */
+canvas,
+.a-canvas,
+video {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  width: 100vw !important;
+  height: 100svh !important;
+  object-fit: cover;
+  background: transparent !important;
+}
+
+/* Sharper 2D PNG rendering (avoids blur) */
+a-image {
+  image-rendering: auto;
+  transform-origin: center;
+}
+
+
+/* ----------------------------
+   HUD (glass panel UI)
+---------------------------- */
+
+/* Start hidden; becomes visible on targetFound (class "active") */
+#hud {
+  display: none;
+  pointer-events: none;                 /* don’t block camera taps */
+  position: fixed;
+  inset: auto 16px 16px auto;           /* bottom-right corner */
+  width: 320px;
+  padding: 16px 18px;
+  border-radius: 22px;
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(12px) saturate(130%);
+  -webkit-backdrop-filter: blur(12px) saturate(130%);
+  border: 1px solid rgba(255,255,255,0.25);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  color: #fff;
+  font: 14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  z-index: 10;
+}
+
+#hud.active {
+  display: block;
+  pointer-events: auto;
+}
+
+/* Each HUD row */
+.step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0;
+}
+
+/* Number badge */
+.badge {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #f49c2f;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.4);
+}
+
+/* Buttons */
+.pill {
+  flex: 1;
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(255,255,255,0.35);
+  background: rgba(0,0,0,0.25);
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.08s ease, background 0.15s ease;
+}
+.pill:hover { transform: translateY(-1px); background: rgba(255,255,255,0.12); }
+.pill:active{ transform: translateY(0); }
+
+/* ----------------------------
+   SAFE-AREA (for iPhones etc.)
+---------------------------- */
 @supports (padding: max(0px)) {
-  #hud { 
+  #hud {
     margin-bottom: max(16px, env(safe-area-inset-bottom));
     margin-right:  max(16px, env(safe-area-inset-right));
   }
