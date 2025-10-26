@@ -1,42 +1,50 @@
-// Vite: turn image files into URLs we can set on <a-image> src
-import cardBaseURL   from './assets/Card_Base.png';
-import cardTextURL   from './assets/Card_Text.png';
-import tri1URL       from './assets/Triangles1.png';
-import tri2URL       from './assets/Triangles2.png';
-import tri3URL       from './assets/Triangles3.png';
-import tri4URL       from './assets/Triangles4.png';
+// src/main.js
+import cardBaseURL from './assets/Card_Base.png';
+import cardTextURL from './assets/Card_Text.png';
+import tri1URL from './assets/Triangles1.png';
+import tri2URL from './assets/Triangles2.png';
+import tri3URL from './assets/Triangles3.png';
+import tri4URL from './assets/Triangles4.png';
 
 window.addEventListener('DOMContentLoaded', () => {
-  const hud        = document.getElementById('hud');
+  const hud = document.getElementById('hud');
   const markerRoot = document.getElementById('markerRoot');
 
-  // --- HUD show/hide (you already had this) ---
-  markerRoot.addEventListener('targetFound', () => hud.classList.add('active'));
-  markerRoot.addEventListener('targetLost',  () => hud.classList.remove('active'));
+  // safety: exit if markerRoot missing
+  if (!markerRoot) {
+    console.error('markerRoot not found!');
+    return;
+  }
 
-  // Utility: make (or get) an <a-image> with consistent size/alignment
-  const ensureImage = (id, z = 0, w = 1, h = 0.6) => {
+  // --- HUD wiring (you had this) ---
+  markerRoot.addEventListener('targetFound', () => hud?.classList.add('active'));
+  markerRoot.addEventListener('targetLost',  () => hud?.classList.remove('active'));
+
+  // helper: create a-image if missing
+  const ensureImage = (id, z = 0.0, w = 1, h = 0.6) => {
     let el = document.getElementById(id);
     if (!el) {
       el = document.createElement('a-image');
       el.setAttribute('id', id);
-      el.setAttribute('width',  String(w));
+      el.setAttribute('width', String(w));
       el.setAttribute('height', String(h));
-      el.setAttribute('position', `0 0 ${z}`); // sit directly on the target
+      // put it exactly on the target; small offsets in z to layering
+      el.setAttribute('position', `0 0 ${z}`);
+      // ensure transparent pixels of PNG stay transparent
+      el.setAttribute('material', 'transparent: true; alphaTest: 0.01; side: double');
       markerRoot.appendChild(el);
     }
     return el;
   };
 
-  // Layers (created if you didn’t add them in HTML)
-  const cardBase = ensureImage('cardBase', 0.000);
-  const cardText = ensureImage('cardText', 0.001);
-  const tri1     = ensureImage('tri1',     0.002);
-  const tri2     = ensureImage('tri2',     0.003);
-  const tri3     = ensureImage('tri3',     0.004);
-  const tri4     = ensureImage('tri4',     0.005);
+  const cardBase = ensureImage('cardBase', 0.000, 1.0, 0.6);
+  const cardText = ensureImage('cardText', 0.001, 1.0, 0.6);
+  const tri1     = ensureImage('tri1', 0.002, 1.0, 0.6);
+  const tri2     = ensureImage('tri2', 0.003, 1.0, 0.6);
+  const tri3     = ensureImage('tri3', 0.004, 1.0, 0.6);
+  const tri4     = ensureImage('tri4', 0.005, 1.0, 0.6);
 
-  // Set sources (from /src/assets via Vite import)
+  // set textures (Vite gives URLs)
   cardBase.setAttribute('src', cardBaseURL);
   cardText.setAttribute('src', cardTextURL);
   tri1.setAttribute('src', tri1URL);
@@ -44,64 +52,55 @@ window.addEventListener('DOMContentLoaded', () => {
   tri3.setAttribute('src', tri3URL);
   tri4.setAttribute('src', tri4URL);
 
-  // Default opacities (so pulses have headroom)
-  [tri1, tri2, tri3, tri4].forEach(el => el.setAttribute('opacity', 0.6));
+  // default tri opacity so pulses are visible
+  [tri1,tri2,tri3,tri4].forEach(t => t.setAttribute('opacity', '0.5'));
 
-  // Staggered pulse for triangle groups (desync = nicer look)
-  const pulse = (el, delayMs) => {
-    el.setAttribute('animation__pulse', {
-      property: 'material.opacity',
-      from: 0.25,
-      to:   1.0,
-      dir: 'alternate',
-      dur: 900,
-      easing: 'easeInOutSine',
-      loop: true,
-      delay: delayMs,
-      // We'll toggle enabled on targetFound/targetLost:
-      enabled: false
-    });
+  // Define pulse animation (string syntax - reliable cross-browser)
+  const addPulseAnimation = (el, idSuffix, delayMs) => {
+    // animated opacity from 0.25 -> 1
+    el.setAttribute(
+      `animation__pulse${idSuffix}`,
+      `property: material.opacity; from: 0.25; to: 1.0; dur: 900; easing: easeInOutSine; loop: true; dir: alternate; delay: ${delayMs}; enabled: false`
+    );
   };
-  pulse(tri1,   0);
-  pulse(tri2, 200);
-  pulse(tri3, 400);
-  pulse(tri4, 600);
 
-  // Fade-out timer for the text layer
+  addPulseAnimation(tri1, 'a', 0);
+  addPulseAnimation(tri2, 'b', 200);
+  addPulseAnimation(tri3, 'c', 400);
+  addPulseAnimation(tri4, 'd', 600);
+
+  // Fade animation for cardText (string syntax)
+  cardText.setAttribute(
+    'animation__fade',
+    'property: material.opacity; to: 0; dur: 1500; easing: easeInOutQuad; enabled: false'
+  );
+
   let fadeTimer = null;
   const startSequence = () => {
-    // reset text to visible each time tracking resumes
-    cardText.setAttribute('material', 'opacity:1');
+    // show text immediately when found
+    cardText.setAttribute('material', 'opacity: 1');
 
-    // enable triangle pulses
-    [tri1, tri2, tri3, tri4].forEach(el =>
-      el.setAttribute('animation__pulse', 'enabled: true')
-    );
+    // enable pulses
+    [tri1,tri2,tri3,tri4].forEach(t => t.setAttribute(`animation__pulse${t.id.slice(-1)}`, 'enabled: true'));
 
     // schedule fade after 10s
     if (fadeTimer) clearTimeout(fadeTimer);
     fadeTimer = setTimeout(() => {
-      cardText.setAttribute('animation__fade', {
-        property: 'material.opacity',
-        to: 0,
-        dur: 1500,
-        easing: 'easeInOutQuad'
-      });
+      cardText.setAttribute('animation__fade', 'enabled: true');
     }, 10000);
   };
 
   const stopSequence = () => {
-    if (fadeTimer) clearTimeout(fadeTimer);
-    // pause triangle pulses when tracking is lost (saves battery and looks clean)
-    [tri1, tri2, tri3, tri4].forEach(el =>
-      el.setAttribute('animation__pulse', 'enabled: false')
-    );
+    if (fadeTimer) { clearTimeout(fadeTimer); fadeTimer = null; }
+    // disable pulses & fade (so it restarts clean next time)
+    [tri1,tri2,tri3,tri4].forEach(t => t.setAttribute(`animation__pulse${t.id.slice(-1)}`, 'enabled: false'));
+    cardText.setAttribute('animation__fade', 'enabled: false');
   };
 
   markerRoot.addEventListener('targetFound', startSequence);
   markerRoot.addEventListener('targetLost',  stopSequence);
 
-  // Optional: hook up your HUD buttons (keep or delete)
+  // buttons (optional)
   document.getElementById('btn-1')?.addEventListener('click', () => console.log('Text 1'));
   document.getElementById('btn-2')?.addEventListener('click', () => console.log('Text 2'));
   document.getElementById('btn-3')?.addEventListener('click', () => console.log('Text 3'));
