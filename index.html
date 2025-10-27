@@ -16,9 +16,11 @@
   <body>
     <!-- HUD -->
     <div id="hud">
-      <div class="step"><span class="badge">1</span><button class="pill" id="btn-1">Text 1</button></div>
-      <div class="step"><span class="badge">2</span><button class="pill" id="btn-2">Text 2</button></div>
-      <div class="step"><span class="badge">3</span><button class="pill" id="btn-3">Text 3</button></div>
+      <div class="step"><span class="badge">1</span><button class="pill" id="btn-1">About me</button></div>
+      <div class="step"><span class="badge">2</span><button class="pill" id="btn-2">Journal</button></div>
+      <div class="step"><span class="badge">3</span><button class="pill" id="btn-3">Career</button></div>
+      <!-- (optional) give this a unique id & badge number -->
+      <div class="step"><span class="badge">4</span><button class="pill" id="btn-4">Project</button></div>
     </div>
 
     <!-- WebAR scene -->
@@ -29,18 +31,18 @@
       renderer="alpha: true; colorManagement: true"
       embedded>
 
-      <!-- Preload assets (UFO lives in /public/assets/ufo/) -->
+      <!-- Preload assets -->
       <a-assets>
-        <a-asset-item id="ufoModel" src="./assets/ufo/scene.gltf"></a-asset-item>
+        <!-- Your cleaned models exported from Blender -->
+        <a-asset-item id="ufoModel"   src="./assets/ufo/UFO.glb"></a-asset-item>
+        <a-asset-item id="ufoLight"   src="./assets/ufo/light.glb"></a-asset-item>
       </a-assets>
 
       <!-- MindAR camera -->
       <a-camera look-controls="enabled: false"></a-camera>
 
-      <!-- Content locked to first image target -->
-      <a-entity mindar-image-target="targetIndex: 0" id="markerRoot">
-        <!-- layers and UFO are created by main.js -->
-      </a-entity>
+      <!-- Marker root: layers + UFO will be added by main.js -->
+      <a-entity mindar-image-target="targetIndex: 0" id="markerRoot"></a-entity>
     </a-scene>
 
     <!-- App -->
