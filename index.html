@@ -5,23 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>WebXR Digital Business Card</title>
 
-    <!-- Styles -->
     <link rel="stylesheet" href="/style.css" />
-
-    <!-- A-Frame + MindAR -->
     <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
   </head>
 
   <body>
-    <!-- HUD -->
     <div id="hud">
       <div class="step"><span class="badge">1</span><button class="pill" id="btn-1">Text 1</button></div>
       <div class="step"><span class="badge">2</span><button class="pill" id="btn-2">Text 2</button></div>
       <div class="step"><span class="badge">3</span><button class="pill" id="btn-3">Text 3</button></div>
     </div>
 
-    <!-- WebAR scene -->
     <a-scene
       mindar-image="imageTargetSrc: ./targets.mind; filterMinCF: 0.001; filterBeta: 0; missTolerance: 30"
       device-orientation-permission-ui="enabled: true"
@@ -29,21 +24,18 @@
       renderer="alpha: true; colorManagement: true"
       embedded>
 
-      <!-- Preload assets (UFO lives in /public/assets/ufo/) -->
+      <!-- UFO model preloaded from public/assets/ufo/ -->
       <a-assets>
         <a-asset-item id="ufoModel" src="./assets/ufo/scene.gltf"></a-asset-item>
       </a-assets>
 
-      <!-- MindAR camera -->
       <a-camera look-controls="enabled: false"></a-camera>
 
-      <!-- Content locked to first image target -->
       <a-entity mindar-image-target="targetIndex: 0" id="markerRoot">
-        <!-- layers and UFO are created by main.js -->
+        <!-- layers + UFO created by main.js -->
       </a-entity>
     </a-scene>
 
-    <!-- App -->
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
