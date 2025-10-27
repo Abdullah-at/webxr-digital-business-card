@@ -1,0 +1,11 @@
+Model Information:
+* title:	UFO | Animated
+* source:	https://sketchfab.com/3d-models/ufo-animated-3de0546e4e944bebb4debd9f819e8576
+* author:	TadenStar (https://sketchfab.com/tadenstar)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "UFO | Animated" (https://sketchfab.com/3d-models/ufo-animated-3de0546e4e944bebb4debd9f819e8576) by TadenStar (https://sketchfab.com/tadenstar) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

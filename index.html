@@ -28,12 +28,18 @@
       vr-mode-ui="enabled: false"
       renderer="alpha: true; colorManagement: true"
       embedded>
+
+      <!-- Preload assets (UFO lives in /public/assets/ufo/) -->
+      <a-assets>
+        <a-asset-item id="ufoModel" src="./assets/ufo/scene.gltf"></a-asset-item>
+      </a-assets>
+
       <!-- MindAR camera -->
       <a-camera look-controls="enabled: false"></a-camera>
 
       <!-- Content locked to first image target -->
       <a-entity mindar-image-target="targetIndex: 0" id="markerRoot">
-        <!-- layers are created by main.js -->
+        <!-- layers and UFO are created by main.js -->
       </a-entity>
     </a-scene>
 
