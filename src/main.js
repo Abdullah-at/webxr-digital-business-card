@@ -1,16 +1,16 @@
-// ---------- Asset imports (Vite) ----------
-import cardBaseURL from './assets/Card_Base.png';
-import cardTextURL from './assets/Card_Text.png';
-import tri1URL     from './assets/Triangles1.png';
-import tri2URL     from './assets/Triangles2.png';
-import tri3URL     from './assets/Triangles3.png';
-import tri4URL     from './assets/Triangles4.png'; // ensure this exists exactly
+// ---------- Asset URLs served from /public/assets ----------
+const cardBaseURL = './assets/Card_Base.png';
+const cardTextURL = './assets/Card_Text.png';
+const tri1URL     = './assets/Triangles1.png';
+const tri2URL     = './assets/Triangles2.png';
+const tri3URL     = './assets/Triangles3.png';
+const tri4URL     = './assets/Triangles4.png';
 
 // ---------- Alignment knobs (tweak if overlay is a hair off) ----------
 const FIT = {
-  width:  1.000,   // set to 1.012 etc. if you need a tiny scale bump
-  height: 0.780,   // keep close to 0.6; tune by 0.003 steps if needed
-  x: 0.000,        // small nudge (e.g., 0.002)
+  width:  1.000,   // bump slightly (e.g., 1.012) if needed
+  height: 0.780,   // your current tuned value
+  x: 0.000,
   y: 0.000
 };
 
@@ -46,7 +46,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const t3   = makeLayer('tri3',     0.004);
   const t4   = makeLayer('tri4',     0.005);
 
-  // set textures
+  // set textures (plain URLs from /public)
   base.setAttribute('src', cardBaseURL);
   text.setAttribute('src', cardTextURL);
   t1.setAttribute('src',   tri1URL);
