@@ -91,17 +91,17 @@
 	"images":[
 		{
 			"mimeType":"image/png",
-			"name":"Material.002_emissive.png",
+			"name":"Image",
 			"uri":"textures/Material.002_emissive.png"
 		},
 		{
 			"mimeType":"image/png",
-			"name":"Material.002_baseColor.png",
+			"name":"Image.002",
 			"uri":"textures/Material.002_baseColor.png"
 		},
 		{
 			"mimeType":"image/png",
-			"name":"Material.002_metallicRoughness.png",
+			"name":"Image.001",
 			"uri":"textures/Material.002_metallicRoughness.png"
 		}
 	],
