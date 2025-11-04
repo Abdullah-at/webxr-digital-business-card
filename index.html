@@ -5,18 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>WebXR Digital Business Card</title>
 
-    <!-- Styles -->
     <link rel="stylesheet" href="/style.css" />
 
     <!-- A-Frame + MindAR -->
     <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-    <!-- Animation mixer (for GLTF clips) -->
+    <!-- Needed for GLTF animation playback -->
     <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
   </head>
 
   <body>
-    <!-- HUD -->
     <div id="hud">
       <div class="step"><span class="badge">1</span><button class="pill" id="btn-1">About me</button></div>
       <div class="step"><span class="badge">2</span><button class="pill" id="btn-2">Journal</button></div>
@@ -24,7 +22,6 @@
       <div class="step"><span class="badge">4</span><button class="pill" id="btn-4">Project</button></div>
     </div>
 
-    <!-- WebAR Scene -->
     <a-scene
       mindar-image="imageTargetSrc: ./targets.mind; filterMinCF: 0.001; filterBeta: 0; missTolerance: 30"
       device-orientation-permission-ui="enabled: true"
@@ -32,17 +29,14 @@
       renderer="alpha: true; colorManagement: true"
       embedded>
 
-      <!-- assets -->
       <a-assets>
-        <!-- single GLTF that has UFO + beam animation baked in -->
+        <!-- Your GLB is exactly here per your screenshot -->
         <a-asset-item id="ufoModel" src="/assets/ufo/UFO.glb" crossorigin="anonymous"></a-asset-item>
       </a-assets>
 
       <a-camera look-controls="enabled: false"></a-camera>
 
-      <a-entity mindar-image-target="targetIndex: 0" id="markerRoot">
-        <!-- JS will append card layers and the UFO -->
-      </a-entity>
+      <a-entity mindar-image-target="targetIndex: 0" id="markerRoot"></a-entity>
     </a-scene>
 
     <script type="module" src="/src/main.js"></script>
