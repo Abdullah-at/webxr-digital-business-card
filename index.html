@@ -11,6 +11,8 @@
     <!-- A-Frame + MindAR -->
     <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <!-- Animation mixer (for GLTF clips) -->
+    <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
   </head>
 
   <body>
@@ -28,20 +30,21 @@
       device-orientation-permission-ui="enabled: true"
       vr-mode-ui="enabled: false"
       renderer="alpha: true; colorManagement: true"
-      embedded
-    >
+      embedded>
+
+      <!-- assets -->
       <a-assets>
-        <a-asset-item id="ufoModel" src="./assets/ufo/UFO.glb"></a-asset-item>
+        <!-- single GLTF that has UFO + beam animation baked in -->
+        <a-asset-item id="ufoModel" src="/assets/ufo/UFO.glb" crossorigin="anonymous"></a-asset-item>
       </a-assets>
 
       <a-camera look-controls="enabled: false"></a-camera>
 
       <a-entity mindar-image-target="targetIndex: 0" id="markerRoot">
-        <!-- Content added dynamically by main.js -->
+        <!-- JS will append card layers and the UFO -->
       </a-entity>
     </a-scene>
 
-    <!-- App -->
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
