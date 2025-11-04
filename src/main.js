@@ -8,8 +8,8 @@ import tri4URL     from '/assets/Triangles4.png';
 
 // ---------- Alignment knobs ----------
 const FIT = {
-  width:  1.000,
-  height: 0.780,
+  width:  1.300,
+  height: 0.980,
   x: 0.000,
   y: 0.000
 };
@@ -66,23 +66,53 @@ window.addEventListener('DOMContentLoaded', () => {
   pulse(t3, 'p3', 400);
   pulse(t4, 'p4', 600);
 
-  // ---------- UFO + LIGHT ----------
+  // ---------- UFO (GLB) ----------
   const ufo = document.createElement('a-entity');
   ufo.setAttribute('id', 'ufo');
-  ufo.setAttribute('gltf-model', '/assets/ufo/UFO.glb');
-  ufo.setAttribute('position', '0 0.4 -0.6'); // slightly above and behind
-  ufo.setAttribute('scale', '0.4 0.4 0.4');
-  ufo.setAttribute('animation__move', 'property: position; to: 0 0.4 0; dur: 3000; easing: easeInOutQuad; startEvents: ufoStart');
+  // Use preloaded asset to avoid network delay
+  ufo.setAttribute('gltf-model', '#ufoModel');
+  // Place slightly above the image and a hair in front so it's visible
+  ufo.setAttribute('position', '0 -0.35 -0.12');
+  ufo.setAttribute('scale', '0.3 0.3 0.3');
   markerRoot.appendChild(ufo);
 
-  const light = document.createElement('a-entity');
-  light.setAttribute('id', 'ufoLight');
-  light.setAttribute('gltf-model', '/assets/ufo/light.glb');
-  light.setAttribute('position', '0 0.15 0');
-  light.setAttribute('scale', '0.4 0.4 0.4');
-  light.setAttribute('material', 'opacity:0');
-  light.setAttribute('animation__fade', 'property: material.opacity; from: 0; to: 1; dur: 2000; startEvents: lightStart');
-  markerRoot.appendChild(light);
+  // Ensure animation-mixer exists after model loads
+  let ufoLoaded = false;
+  ufo.addEventListener('model-loaded', () => {
+    ufoLoaded = true;
+    // Detect clips from GLB and log them for debugging
+    const evt = event; // implicit event in handler
+    const animations = evt?.detail?.model?.animations || [];
+    const clipNames = animations.map(a => a.name);
+    console.log('[UFO] model-loaded. Clips:', clipNames);
+    const firstClip = clipNames[0] || '*';
+    // Initialize mixer paused on the detected clip
+    ufo.setAttribute('animation-mixer', `clip: ${firstClip}; loop: once; repetitions: 1; clampWhenFinished: true; timeScale: 0`);
+
+    // Visibility safety: disable frustum culling and force DoubleSide on materials
+    try {
+      const model = evt.detail.model;
+      const THREE = window.THREE;
+      if (model && THREE) {
+        model.traverse((node) => {
+          if (node.isMesh || node.isSkinnedMesh) {
+            node.frustumCulled = false;
+            if (node.material) {
+              const materials = Array.isArray(node.material) ? node.material : [node.material];
+              materials.forEach((m) => { m.side = THREE.DoubleSide; m.needsUpdate = true; });
+            }
+          }
+        });
+        // Log bounding box to debug scale
+        const box = new THREE.Box3().setFromObject(model);
+        const size = new THREE.Vector3();
+        box.getSize(size);
+        console.log('[UFO] bounds size (m):', size.x.toFixed(3), size.y.toFixed(3), size.z.toFixed(3));
+      }
+    } catch (e) {
+      console.warn('[UFO] post-load adjustments failed', e);
+    }
+  });
 
   // ---------- Sequence logic ----------
   let fadeTimer = null;
@@ -90,26 +120,40 @@ window.addEventListener('DOMContentLoaded', () => {
   const startSequence = () => {
     // Hide the card at first
     [base,text,t1,t2,t3,t4].forEach(el => el.setAttribute('visible', false));
+    
+    // Reset and play GLB baked animation from the start (wait if still loading)
+    const play = () => {
+      const mixer = ufo.components['animation-mixer'];
+      if (mixer) {
+        mixer.stopAction('*');
+        mixer.playAction('*');
+        // Unpause and ensure one-shot
+        const current = ufo.getAttribute('animation-mixer') || '';
+        ufo.setAttribute('animation-mixer', `${current}; timeScale: 1; loop: once; repetitions: 1; clampWhenFinished: true`);
+      }
+    };
+    if (ufoLoaded) play(); else ufo.addEventListener('model-loaded', play, { once: true });
 
-    // UFO flight animation
-    ufo.emit('ufoStart');
-
-    // After UFO arrives, turn on light
-    setTimeout(() => light.emit('lightStart'), 3000);
-
-    // After light on, show the card and start animations
-    setTimeout(() => {
+    // When animation finishes, show the card layers and start pulses
+    const onFinished = () => {
       [base,text,t1,t2,t3,t4].forEach(el => el.setAttribute('visible', true));
       text.setAttribute('material', 'opacity:1');
       [t1,t2,t3,t4].forEach(el => el.emit('pulse-start'));
       fadeTimer = setTimeout(() => text.emit('start-fade'), 10000);
-    }, 5000);
+      ufo.removeEventListener('animation-finished', onFinished);
+    };
+    ufo.addEventListener('animation-finished', onFinished);
   };
 
   const stopSequence = () => {
     if (fadeTimer) { clearTimeout(fadeTimer); fadeTimer = null; }
     [t1,t2,t3,t4].forEach(el => el.emit('pulse-stop'));
     text.setAttribute('material', 'opacity:1');
+    // Pause animation when target lost
+    const mixer = ufo.components['animation-mixer'];
+    if (mixer) {
+      ufo.setAttribute('animation-mixer', 'clip: *; loop: once; repetitions: 1; timeScale: 0');
+    }
   };
 
   markerRoot.addEventListener('targetFound', startSequence);
