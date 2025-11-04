@@ -12,6 +12,8 @@
     <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
+    <!-- Animation mixer (needed to play GLB animations) -->
+    <script src="https://cdn.jsdelivr.net/npm/aframe-extras@7.7.1/dist/aframe-extras.min.js"></script>
   </head>
 
   <body>
@@ -23,27 +25,26 @@
       <div class="step"><span class="badge">4</span><button class="pill" id="btn-4">Project</button></div>
     </div>
 
+    <!-- WebAR scene -->
     <a-scene
-      mindar-image="imageTargetSrc: ./targets.mind; filterMinCF: 0.001; filterBeta: 0; missTolerance: 30"
+      mindar-image="imageTargetSrc: /targets.mind; filterMinCF: 0.001; filterBeta: 0; missTolerance: 30"
       device-orientation-permission-ui="enabled: true"
       vr-mode-ui="enabled: false"
       renderer="alpha: true; colorManagement: true"
       embedded>
 
-      <!-- Preload the UFO once (lives in /public/assets/ufo/) -->
-      <a-assets>
-        <a-asset-item id="ufoModel" src="/assets/ufo/UFO.glb"></a-asset-item>
+      <!-- Preload assets (everything under /public is served at /) -->
+      <a-assets timeout="60000">
+        <a-asset-item id="ufoModel" src="/assets/ufo/UFO.glb" crossorigin="anonymous"></a-asset-item>
       </a-assets>
 
       <a-camera look-controls="enabled: false"></a-camera>
 
-      <!-- Content locked to first image target -->
-      <a-entity mindar-image-target="targetIndex: 0" id="markerRoot">
-        <!-- JS will inject the card layers + the UFO -->
-      </a-entity>
+      <!-- All content gets attached here by JS -->
+      <a-entity mindar-image-target="targetIndex: 0" id="markerRoot"></a-entity>
     </a-scene>
 
-    <script type="module" src="/main.js"></script>
-
+    <!-- IMPORTANT: point to Vite entry in /src -->
+    <script type="module" src="/src/main.js"></script>
   </body>
 </html>

@@ -12,13 +12,14 @@ const FIT = { width: 1.000, height: 0.780, x: 0.000, y: 0.000 };
 window.addEventListener('DOMContentLoaded', () => {
   const hud        = document.getElementById('hud');
   const markerRoot = document.getElementById('markerRoot');
+  const scene      = document.querySelector('a-scene');
   if (!markerRoot) return;
 
-  // HUD toggle with tracking
+  // HUD visibility while tracked
   markerRoot.addEventListener('targetFound', () => hud?.classList.add('active'));
   markerRoot.addEventListener('targetLost',  () => hud?.classList.remove('active'));
 
-  // Helper to (create or) get a child element
+  // Helper to create/get a layer
   const makeLayer = (id, z) => {
     let el = document.getElementById(id);
     if (!el) {
@@ -48,7 +49,7 @@ window.addEventListener('DOMContentLoaded', () => {
   t3.setAttribute('src',   tri3URL);
   t4.setAttribute('src',   tri4URL);
 
-  // Triangles pulsers (we’ll start/stop them via events)
+  // Triangles pulsing (glow-ish)
   const pulse = (el, name, delay) => {
     el.setAttribute(
       `animation__${name}`,
@@ -60,30 +61,26 @@ window.addEventListener('DOMContentLoaded', () => {
   pulse(t3, 'p3', 400);
   pulse(t4, 'p4', 600);
 
-  // Text fade animation (we’ll trigger by event)
+  // Text fade-out (we trigger later)
   text.setAttribute(
     'animation__fade',
     'property: material.opacity; from: 1; to: 0; dur: 1200; easing: easeInOutQuad; startEvents: start-fade'
   );
 
-  // ---------- UFO (created once, animation triggered on each detection) ----------
+  // ---------- UFO (created once; animation played on each detection) ----------
   let ufo = document.getElementById('ufo');
   if (!ufo) {
     ufo = document.createElement('a-entity');
     ufo.setAttribute('id', 'ufo');
-    // Use preloaded asset from <a-assets>, so we avoid any path issues
-    ufo.setAttribute('gltf-model', '#ufoModel');
-    // Start a bit above / behind; your internal GLB animation will take it from there.
-    ufo.setAttribute('position', '0 0.35 -0.35');
+    ufo.setAttribute('gltf-model', '#ufoModel');   // use preloaded asset
+    ufo.setAttribute('position', '0 0.35 -0.35');  // slightly behind/above
     ufo.setAttribute('rotation', '0 0 0');
     ufo.setAttribute('scale',    '0.4 0.4 0.4');
-    // Keep it hidden until we play the animation
     ufo.setAttribute('visible', 'false');
     markerRoot.appendChild(ufo);
 
-    // Log once to confirm load
     ufo.addEventListener('model-loaded', e => {
-      console.log('[UFO] model-loaded', e.detail);
+      console.log('[UFO] model-loaded', e.detail?.model);
     });
   }
 
@@ -91,16 +88,17 @@ window.addEventListener('DOMContentLoaded', () => {
   let textFadeTimer = null;
   let cardShowTimer = null;
 
-  // Reset everything so re-detections behave
-  const resetCardState = () => {
-    [base, text, t1, t2, t3, t4].forEach(el => el.setAttribute('visible', 'false'));
+  const hideCard = () => {
+    [base, text, t1, t2, t3, t4].forEach(el => {
+      el.setAttribute('visible', 'false');
+      // ensure they come back fully opaque next time
+      el.setAttribute('material', { opacity: 1, transparent: true, side: 'double', alphaTest: 0.01 });
+    });
     [t1, t2, t3, t4].forEach(el => el.emit('pulse-stop'));
-    text.setAttribute('material', 'opacity:1');
   };
 
   const playUFOOnce = () => {
-    // Re-apply animation-mixer to restart baked animation each detection
-    // Play every clip, exactly once, and keep the final pose.
+    // Re-add the mixer so baked GLB animation plays once, then holds last frame
     ufo.setAttribute(
       'animation-mixer',
       'clip: *; loop: once; repetitions: 1; clampWhenFinished: true; crossFadeDuration: 0.2'
@@ -109,12 +107,12 @@ window.addEventListener('DOMContentLoaded', () => {
   };
 
   const startSequence = () => {
-    resetCardState();
+    hideCard();
 
-    // 1) Play the GLB’s internal animation once
+    // 1) Play the GLB animation once
     playUFOOnce();
 
-    // 2) After 6s show card + start triangle glow; schedule text fade at 10s
+    // 2) After 6s, reveal the card + start triangle glow; text fades at 10s total
     if (cardShowTimer) clearTimeout(cardShowTimer);
     cardShowTimer = setTimeout(() => {
       [base, text, t1, t2, t3, t4].forEach(el => el.setAttribute('visible', 'true'));
@@ -128,18 +126,18 @@ window.addEventListener('DOMContentLoaded', () => {
   const stopSequence = () => {
     if (textFadeTimer) { clearTimeout(textFadeTimer); textFadeTimer = null; }
     if (cardShowTimer) { clearTimeout(cardShowTimer); cardShowTimer = null; }
-    // Hide card + stop pulses immediately
-    resetCardState();
-    // Hide UFO (next detection will replay its animation by re-setting animation-mixer)
+
+    hideCard();
+
+    // Hide UFO and clear mixer so the next detection replays animation
     ufo.setAttribute('visible', 'false');
-    // Remove the mixer so the next setAttribute re-initializes and plays again
     if (ufo.hasAttribute('animation-mixer')) ufo.removeAttribute('animation-mixer');
   };
 
   markerRoot.addEventListener('targetFound', startSequence);
   markerRoot.addEventListener('targetLost',  stopSequence);
 
-  // ---------- HUD buttons (kept simple for now) ----------
+  // ---------- HUD buttons ----------
   document.getElementById('btn-1')?.addEventListener('click', () => console.log('About me'));
   document.getElementById('btn-2')?.addEventListener('click', () => console.log('Journal'));
   document.getElementById('btn-3')?.addEventListener('click', () => console.log('Career'));

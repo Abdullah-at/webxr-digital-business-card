@@ -2,7 +2,7 @@
 html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
 a-scene { position: fixed; inset: 0; }
 
-/* Simple HUD styling (keep what you had; this is minimal and safe) */
+/* HUD */
 #hud {
   position: fixed;
   left: 16px;
