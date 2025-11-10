@@ -20,14 +20,13 @@ window.addEventListener('DOMContentLoaded', () => {
   const markerRoot     = document.getElementById('markerRoot');
   if (!markerRoot) return;
 
-  // HUD and tracker overlay toggle
+  // Tracker overlay toggle (hide when target found)
   markerRoot.addEventListener('targetFound', () => {
-    hud?.classList.add('active');
     trackerOverlay?.classList.add('hidden');
   });
   markerRoot.addEventListener('targetLost', () => {
-    hud?.classList.remove('active');
     trackerOverlay?.classList.remove('hidden');
+    hud?.classList.remove('active');
   });
 
   // Helper to create layers
@@ -141,12 +140,15 @@ window.addEventListener('DOMContentLoaded', () => {
     };
     if (ufoLoaded) play(); else ufo.addEventListener('model-loaded', play, { once: true });
 
-    // After 6 seconds, show the card layers and start triangle pulses
+    // After 6 seconds, show the card layers, HUD buttons, and start triangle pulses
     setTimeout(() => {
       [base,text,t1,t2,t3,t4].forEach(el => el.setAttribute('visible', true));
       text.setAttribute('material', 'opacity:1');
       [t1,t2,t3,t4].forEach(el => el.emit('pulse-start'));
       fadeTimer = setTimeout(() => text.emit('start-fade'), 10000);
+      
+      // Activate HUD buttons
+      hud?.classList.add('active');
     }, 6000);
   };
 
@@ -164,9 +166,30 @@ window.addEventListener('DOMContentLoaded', () => {
   markerRoot.addEventListener('targetFound', startSequence);
   markerRoot.addEventListener('targetLost',  stopSequence);
 
-  // HUD buttons
-  document.getElementById('btn-1')?.addEventListener('click', () => console.log('About me'));
-  document.getElementById('btn-2')?.addEventListener('click', () => console.log('Journal'));
-  document.getElementById('btn-3')?.addEventListener('click', () => console.log('Career'));
-  document.getElementById('btn-4')?.addEventListener('click', () => console.log('Project'));
+  // ---------- HUD Button Controllers ----------
+  // These buttons control the digital business card layers
+  
+  document.getElementById('btn-1')?.addEventListener('click', () => {
+    console.log('[HUD] About Me clicked');
+    // Controller logic for About Me section
+    // TODO: Define what this button controls on the card
+  });
+
+  document.getElementById('btn-2')?.addEventListener('click', () => {
+    console.log('[HUD] Journal clicked');
+    // Controller logic for Journal section
+    // TODO: Define what this button controls on the card
+  });
+
+  document.getElementById('btn-3')?.addEventListener('click', () => {
+    console.log('[HUD] Career clicked');
+    // Controller logic for Career section
+    // TODO: Define what this button controls on the card
+  });
+
+  document.getElementById('btn-4')?.addEventListener('click', () => {
+    console.log('[HUD] Project clicked');
+    // Controller logic for Project section
+    // TODO: Define what this button controls on the card
+  });
 });
