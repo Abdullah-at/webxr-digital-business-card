@@ -15,7 +15,6 @@ const FIT = {
 };
 
 window.addEventListener('DOMContentLoaded', () => {
-  const hud           = document.getElementById('hud');
   const trackerOverlay = document.getElementById('tracker-overlay');
   const markerRoot     = document.getElementById('markerRoot');
   if (!markerRoot) return;
@@ -26,7 +25,6 @@ window.addEventListener('DOMContentLoaded', () => {
   });
   markerRoot.addEventListener('targetLost', () => {
     trackerOverlay?.classList.remove('hidden');
-    hud?.classList.remove('active');
   });
 
   // Helper to create layers
@@ -51,6 +49,10 @@ window.addEventListener('DOMContentLoaded', () => {
   const t2   = makeLayer('tri2',     0.003);
   const t3   = makeLayer('tri3',     0.004);
   const t4   = makeLayer('tri4',     0.005);
+  
+  // Content layer (sits above base, replaces text/triangles when cube face tapped)
+  const content = makeLayer('cardContent', 0.006);
+  content.setAttribute('visible', false);
 
   // Apply textures
   base.setAttribute('src', cardBaseURL);
@@ -64,6 +66,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Animations
   text.setAttribute('animation__fade', 'property: material.opacity; from: 1; to: 0; dur: 1200; easing: easeInOutQuad; startEvents: start-fade');
+  text.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-text');
+  
   const pulse = (el, name, delay) => {
     el.setAttribute(`animation__${name}`, `property: material.opacity; from: 0.25; to: 1; dir: alternate; loop: true; dur: 900; easing: easeInOutSine; delay: ${delay}; startEvents: pulse-start; pauseEvents: pulse-stop`);
   };
@@ -71,6 +75,15 @@ window.addEventListener('DOMContentLoaded', () => {
   pulse(t2, 'p2', 200);
   pulse(t3, 'p3', 400);
   pulse(t4, 'p4', 600);
+  
+  // Fade out animations for triangles
+  [t1, t2, t3, t4].forEach((el, i) => {
+    el.setAttribute('animation__fadeout', `property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-triangles; delay: ${i * 100}`);
+  });
+  
+  // Content layer fade in/out
+  content.setAttribute('animation__fadein', 'property: material.opacity; from: 0; to: 1; dur: 800; easing: easeInOutQuad; startEvents: show-content');
+  content.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-content');
 
   // ---------- UFO (GLB) ----------
   const ufo = document.createElement('a-entity');
@@ -81,6 +94,18 @@ window.addEventListener('DOMContentLoaded', () => {
   ufo.setAttribute('position', '0 -0.35 -0.12');
   ufo.setAttribute('scale', '0.3 0.3 0.3');
   markerRoot.appendChild(ufo);
+
+  // ---------- CUBE (3D Button Panel Replacement) ----------
+  const cube = document.createElement('a-entity');
+  cube.setAttribute('id', 'cube');
+  cube.setAttribute('gltf-model', '#cubeModel');
+  // Position below the card with clear separation
+  cube.setAttribute('position', '0 -1.2 0');
+  cube.setAttribute('scale', '0.25 0.25 0.25');
+  cube.setAttribute('visible', 'false');
+  // Enable 360° rotation interaction
+  cube.setAttribute('class', 'clickable');
+  markerRoot.appendChild(cube);
 
   // Ensure animation-mixer exists after model loads
   let ufoLoaded = false;
@@ -120,12 +145,54 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // ---------- Cube Interaction (360° Rotation) ----------
+  let isDragging = false;
+  let previousMouseX = 0;
+  let cubeRotation = { x: 0, y: 0 };
+
+  // Touch/Mouse start
+  cube.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    previousMouseX = e.detail.intersection?.point?.x || 0;
+  });
+
+  cube.addEventListener('touchstart', (e) => {
+    isDragging = true;
+    const touch = e.touches?.[0];
+    previousMouseX = touch?.clientX || 0;
+  });
+
+  // Touch/Mouse move - rotate cube
+  const onMove = (clientX) => {
+    if (!isDragging) return;
+    const deltaX = clientX - previousMouseX;
+    cubeRotation.y += deltaX * 100; // Sensitivity
+    cube.setAttribute('rotation', `${cubeRotation.x} ${cubeRotation.y} 0`);
+    previousMouseX = clientX;
+  };
+
+  document.addEventListener('mousemove', (e) => {
+    if (isDragging) onMove(e.clientX);
+  });
+
+  document.addEventListener('touchmove', (e) => {
+    if (isDragging && e.touches?.[0]) {
+      onMove(e.touches[0].clientX);
+    }
+  });
+
+  // Touch/Mouse end
+  const stopDrag = () => { isDragging = false; };
+  document.addEventListener('mouseup', stopDrag);
+  document.addEventListener('touchend', stopDrag);
+
   // ---------- Sequence logic ----------
   let fadeTimer = null;
 
   const startSequence = () => {
-    // Hide the card at first
+    // Hide the card and cube at first
     [base,text,t1,t2,t3,t4].forEach(el => el.setAttribute('visible', false));
+    cube.setAttribute('visible', false);
     
     // Reset and play GLB baked animation from the start (wait if still loading)
     const play = () => {
@@ -140,15 +207,15 @@ window.addEventListener('DOMContentLoaded', () => {
     };
     if (ufoLoaded) play(); else ufo.addEventListener('model-loaded', play, { once: true });
 
-    // After 6 seconds, show the card layers, HUD buttons, and start triangle pulses
+    // After 6 seconds, show the card layers, cube, and start triangle pulses
     setTimeout(() => {
       [base,text,t1,t2,t3,t4].forEach(el => el.setAttribute('visible', true));
       text.setAttribute('material', 'opacity:1');
       [t1,t2,t3,t4].forEach(el => el.emit('pulse-start'));
       fadeTimer = setTimeout(() => text.emit('start-fade'), 10000);
       
-      // Activate HUD buttons
-      hud?.classList.add('active');
+      // Show interactive cube
+      cube.setAttribute('visible', true);
     }, 6000);
   };
 
@@ -156,6 +223,9 @@ window.addEventListener('DOMContentLoaded', () => {
     if (fadeTimer) { clearTimeout(fadeTimer); fadeTimer = null; }
     [t1,t2,t3,t4].forEach(el => el.emit('pulse-stop'));
     text.setAttribute('material', 'opacity:1');
+    // Hide cube when target lost
+    cube.setAttribute('visible', false);
+    isDragging = false;
     // Pause animation when target lost
     const mixer = ufo.components['animation-mixer'];
     if (mixer) {
@@ -166,30 +236,93 @@ window.addEventListener('DOMContentLoaded', () => {
   markerRoot.addEventListener('targetFound', startSequence);
   markerRoot.addEventListener('targetLost',  stopSequence);
 
-  // ---------- HUD Button Controllers ----------
-  // These buttons control the digital business card layers
+  // ---------- Content Switching System ----------
+  let currentContent = null;
   
-  document.getElementById('btn-1')?.addEventListener('click', () => {
-    console.log('[HUD] About Me clicked');
-    // Controller logic for About Me section
-    // TODO: Define what this button controls on the card
-  });
+  const showContent = (contentName, imageUrl) => {
+    if (currentContent === contentName) return; // Already showing
+    
+    console.log(`[CUBE] Switching to: ${contentName}`);
+    currentContent = contentName;
+    
+    // Stop triangle pulses and fade everything out
+    [t1, t2, t3, t4].forEach(el => el.emit('pulse-stop'));
+    text.emit('hide-text');
+    [t1, t2, t3, t4].forEach(el => el.emit('hide-triangles'));
+    
+    // After fade out, show new content
+    setTimeout(() => {
+      content.setAttribute('src', imageUrl);
+      content.setAttribute('visible', true);
+      content.setAttribute('material', 'opacity:0');
+      content.emit('show-content');
+    }, 900); // Wait for fade out to complete
+  };
+  
+  const resetToDefault = () => {
+    if (!currentContent) return; // Already in default state
+    
+    console.log('[CUBE] Resetting to default view');
+    currentContent = null;
+    
+    // Fade out content
+    content.emit('hide-content');
+    
+    // After fade out, restore text and triangles
+    setTimeout(() => {
+      content.setAttribute('visible', false);
+      text.setAttribute('material', 'opacity:1');
+      [t1, t2, t3, t4].forEach(el => {
+        el.setAttribute('material', 'opacity:0.5');
+        el.emit('pulse-start');
+      });
+    }, 900);
+  };
 
-  document.getElementById('btn-2')?.addEventListener('click', () => {
-    console.log('[HUD] Journal clicked');
-    // Controller logic for Journal section
-    // TODO: Define what this button controls on the card
-  });
-
-  document.getElementById('btn-3')?.addEventListener('click', () => {
-    console.log('[HUD] Career clicked');
-    // Controller logic for Career section
-    // TODO: Define what this button controls on the card
-  });
-
-  document.getElementById('btn-4')?.addEventListener('click', () => {
-    console.log('[HUD] Project clicked');
-    // Controller logic for Project section
-    // TODO: Define what this button controls on the card
+  // ---------- Cube Face Click Detection ----------
+  cube.addEventListener('click', (e) => {
+    const intersection = e.detail.intersection;
+    if (!intersection) return;
+    
+    const normal = intersection.face?.normal;
+    if (!normal) return;
+    
+    // Detect which face was clicked based on normal vector
+    const absX = Math.abs(normal.x);
+    const absY = Math.abs(normal.y);
+    const absZ = Math.abs(normal.z);
+    
+    let face = 'unknown';
+    if (absX > absY && absX > absZ) {
+      face = normal.x > 0 ? 'right' : 'left';
+    } else if (absY > absX && absY > absZ) {
+      face = normal.y > 0 ? 'top' : 'bottom';
+    } else if (absZ > absX && absZ > absY) {
+      face = normal.z > 0 ? 'front' : 'back';
+    }
+    
+    console.log(`[CUBE] Face clicked: ${face}`);
+    
+    // Map faces to content
+    switch(face) {
+      case 'front':
+        showContent('about', './assets/Art.png');
+        break;
+      case 'right':
+        showContent('journal', './assets/Journal.png');
+        break;
+      case 'back':
+        showContent('career', './assets/Career.png');
+        break;
+      case 'left':
+        showContent('project', './assets/Project.png');
+        break;
+      case 'top':
+        resetToDefault();
+        break;
+      case 'bottom':
+        resetToDefault();
+        break;
+    }
   });
 });

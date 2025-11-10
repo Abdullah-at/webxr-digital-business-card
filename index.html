@@ -20,14 +20,15 @@
       <img src="./assets/tracker.png" alt="Scan target">
     </div>
 
-    <!-- HUD -->
+    <!-- HUD - COMMENTED OUT (replaced by 3D cube) -->
+    <!-- 
     <div id="hud">
-      <div class="step"><span class="badge">1</span><button class="pill" id="btn-1">About</button></div>
+      <div class="step"><span class="badge">1</span><button class="pill" id="btn-1">About Me</button></div>
       <div class="step"><span class="badge">2</span><button class="pill" id="btn-2">Journal</button></div>
       <div class="step"><span class="badge">3</span><button class="pill" id="btn-3">Career</button></div>
-      <!-- (optional) give this a unique id & badge number -->
       <div class="step"><span class="badge">5</span><button class="pill" id="btn-4">Project</button></div>
     </div>
+    -->
 
     <!-- WebAR scene -->
     <a-scene
@@ -40,7 +41,8 @@
       <!-- Preload assets -->
       <a-assets>
         <!-- Your cleaned models exported from Blender -->
-        <a-asset-item id="ufoModel"   src="./assets/ufo/UFO.glb"></a-asset-item>
+        <a-asset-item id="ufoModel"  src="./assets/ufo/UFO.glb"></a-asset-item>
+        <a-asset-item id="cubeModel" src="./assets/ufo/cube.glb"></a-asset-item>
       </a-assets>
 
       <!-- MindAR camera -->
