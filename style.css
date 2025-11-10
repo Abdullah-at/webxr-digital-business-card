@@ -81,3 +81,27 @@ a-image {
     margin-right:  max(16px, env(safe-area-inset-right));
   }
 }
+
+/* ----------------------------
+   CUSTOM TRACKER OVERLAY
+---------------------------- */
+#tracker-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0.3; /* 30% transparency */
+}
+
+#tracker-overlay img {
+  max-width: 80vw;
+  max-height: 80vh;
+  object-fit: contain;
+}
+
+#tracker-overlay.hidden {
+  display: none;
+}

@@ -15,13 +15,20 @@ const FIT = {
 };
 
 window.addEventListener('DOMContentLoaded', () => {
-  const hud        = document.getElementById('hud');
-  const markerRoot = document.getElementById('markerRoot');
+  const hud           = document.getElementById('hud');
+  const trackerOverlay = document.getElementById('tracker-overlay');
+  const markerRoot     = document.getElementById('markerRoot');
   if (!markerRoot) return;
 
-  // HUD toggle
-  markerRoot.addEventListener('targetFound', () => hud?.classList.add('active'));
-  markerRoot.addEventListener('targetLost',  () => hud?.classList.remove('active'));
+  // HUD and tracker overlay toggle
+  markerRoot.addEventListener('targetFound', () => {
+    hud?.classList.add('active');
+    trackerOverlay?.classList.add('hidden');
+  });
+  markerRoot.addEventListener('targetLost', () => {
+    hud?.classList.remove('active');
+    trackerOverlay?.classList.remove('hidden');
+  });
 
   // Helper to create layers
   const makeLayer = (id, z) => {
@@ -134,15 +141,13 @@ window.addEventListener('DOMContentLoaded', () => {
     };
     if (ufoLoaded) play(); else ufo.addEventListener('model-loaded', play, { once: true });
 
-    // When animation finishes, show the card layers and start pulses
-    const onFinished = () => {
+    // After 6 seconds, show the card layers and start triangle pulses
+    setTimeout(() => {
       [base,text,t1,t2,t3,t4].forEach(el => el.setAttribute('visible', true));
       text.setAttribute('material', 'opacity:1');
       [t1,t2,t3,t4].forEach(el => el.emit('pulse-start'));
       fadeTimer = setTimeout(() => text.emit('start-fade'), 10000);
-      ufo.removeEventListener('animation-finished', onFinished);
-    };
-    ufo.addEventListener('animation-finished', onFinished);
+    }, 6000);
   };
 
   const stopSequence = () => {
