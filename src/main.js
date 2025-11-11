@@ -101,7 +101,7 @@ window.addEventListener('DOMContentLoaded', () => {
   cube.setAttribute('gltf-model', '#cubeModel');
   // Position below the card with clear separation
   cube.setAttribute('position', '0 -1.2 0');
-  cube.setAttribute('scale', '0.05 0.05 0.05');
+  cube.setAttribute('scale', '0.03 0.03 0.03');
   cube.setAttribute('visible', 'false');
   // Enable 360° rotation interaction
   cube.setAttribute('class', 'clickable');
