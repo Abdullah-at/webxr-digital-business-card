@@ -6,6 +6,9 @@ import tri2URL     from '/assets/Triangles2.png';
 import tri3URL     from '/assets/Triangles3.png';
 import tri4URL     from '/assets/Triangles4.png';
 
+// Import Cube Controller
+import { CubeController } from './cubeController.js';
+
 // ---------- Alignment knobs ----------
 const FIT = {
   width:  1.300,
@@ -145,46 +148,10 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // ---------- Cube Interaction (360° Rotation) ----------
-  let isDragging = false;
-  let previousMouseX = 0;
-  let cubeRotation = { x: 0, y: 0 };
-
-  // Touch/Mouse start
-  cube.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    previousMouseX = e.detail.intersection?.point?.x || 0;
-  });
-
-  cube.addEventListener('touchstart', (e) => {
-    isDragging = true;
-    const touch = e.touches?.[0];
-    previousMouseX = touch?.clientX || 0;
-  });
-
-  // Touch/Mouse move - rotate cube
-  const onMove = (clientX) => {
-    if (!isDragging) return;
-    const deltaX = clientX - previousMouseX;
-    cubeRotation.y += deltaX * 100; // Sensitivity
-    cube.setAttribute('rotation', `${cubeRotation.x} ${cubeRotation.y} 0`);
-    previousMouseX = clientX;
-  };
-
-  document.addEventListener('mousemove', (e) => {
-    if (isDragging) onMove(e.clientX);
-  });
-
-  document.addEventListener('touchmove', (e) => {
-    if (isDragging && e.touches?.[0]) {
-      onMove(e.touches[0].clientX);
-    }
-  });
-
-  // Touch/Mouse end
-  const stopDrag = () => { isDragging = false; };
-  document.addEventListener('mouseup', stopDrag);
-  document.addEventListener('touchend', stopDrag);
+  // ---------- Cube Interaction (Three.js Controller) ----------
+  // Initialize the cube controller with Three.js-based rotation
+  const cubeController = new CubeController(cube);
+  console.log('[MAIN] CubeController initialized');
 
   // ---------- Sequence logic ----------
   let fadeTimer = null;
@@ -225,7 +192,8 @@ window.addEventListener('DOMContentLoaded', () => {
     text.setAttribute('material', 'opacity:1');
     // Hide cube when target lost
     cube.setAttribute('visible', false);
-    isDragging = false;
+    // Stop any cube rotation
+    cubeController.stopRotation();
     // Pause animation when target lost
     const mixer = ufo.components['animation-mixer'];
     if (mixer) {
@@ -281,11 +249,23 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // ---------- Cube Face Click Detection ----------
   cube.addEventListener('click', (e) => {
-    const intersection = e.detail.intersection;
-    if (!intersection) return;
+    // Use controller to check if this was a tap or drag
+    if (!cubeController.wasQuickTap()) {
+      console.log('[CUBE] Ignoring click - was a drag');
+      return;
+    }
+    
+    const intersection = e.detail?.intersection;
+    if (!intersection) {
+      console.warn('[CUBE] No intersection data');
+      return;
+    }
     
     const normal = intersection.face?.normal;
-    if (!normal) return;
+    if (!normal) {
+      console.warn('[CUBE] No face normal data');
+      return;
+    }
     
     // Detect which face was clicked based on normal vector
     const absX = Math.abs(normal.x);
@@ -301,7 +281,7 @@ window.addEventListener('DOMContentLoaded', () => {
       face = normal.z > 0 ? 'front' : 'back';
     }
     
-    console.log(`[CUBE] Face clicked: ${face}`);
+    console.log(`[CUBE] Face tapped: ${face}`, normal);
     
     // Map faces to content
     switch(face) {
@@ -318,8 +298,6 @@ window.addEventListener('DOMContentLoaded', () => {
         showContent('project', './assets/Project.png');
         break;
       case 'top':
-        resetToDefault();
-        break;
       case 'bottom':
         resetToDefault();
         break;
