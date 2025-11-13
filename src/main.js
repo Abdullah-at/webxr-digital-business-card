@@ -253,53 +253,35 @@ window.addEventListener('DOMContentLoaded', () => {
     }, 900);
   };
 
-  // ---------- Cube Face Click Detection ----------
-  // Add raycaster to camera for cube detection
-  const camera = document.querySelector('a-camera');
-  if (camera) {
-    camera.setAttribute('raycaster', 'objects: .clickable');
-    console.log('[MAIN] Raycaster configured');
-  }
-  
-  // Listen for clicks directly on the cube GLB model
-  cube.addEventListener('click', (e) => {
-    console.log('[CUBE] Cube clicked!', e.detail);
+  // ---------- Button Click Detection ----------
+  // Listen for clicks on button images directly
+  // Add listeners to each button after they're created
+  setTimeout(() => {
+    const allButtons = document.querySelectorAll('.face-button');
+    console.log('[MAIN] Found', allButtons.length, 'buttons to wire up');
     
-    // Check if this was a quick tap (not drag rotation)
-    if (!cubeController.wasQuickTap()) {
-      console.log('[CUBE] Ignoring - was a drag');
-      return;
-    }
-    
-    const intersection = e.detail?.intersection;
-    if (!intersection) return;
-    
-    const normal = intersection.face?.normal;
-    if (!normal) {
-      console.warn('[CUBE] No face normal - clicking might work but cant detect which face');
-      return;
-    }
-    
-    // Detect which face was clicked based on normal vector
-    const absX = Math.abs(normal.x);
-    const absY = Math.abs(normal.y);
-    const absZ = Math.abs(normal.z);
-    
-    let faceName = 'unknown';
-    if (absX > absY && absX > absZ) {
-      faceName = normal.x > 0 ? 'right' : 'left';
-    } else if (absY > absX && absY > absZ) {
-      faceName = normal.y > 0 ? 'top' : 'bottom';
-    } else if (absZ > absX && absZ > absY) {
-      faceName = normal.z > 0 ? 'front' : 'back';
-    }
-    
-    const faceData = cubeFaces.getFace(faceName);
-    if (faceData) {
-      console.log(`[CUBE] Face tapped: ${faceData.label} (${faceName})`);
-      handleFaceAction(faceName, faceData.label);
-    }
-  });
+    allButtons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent event bubbling
+        
+        // Check if was a tap not a drag
+        if (!cubeController.wasQuickTap()) {
+          console.log('[BUTTON] Ignoring - was a drag');
+          return;
+        }
+        
+        const faceName = button.getAttribute('data-face');
+        const faceData = cubeFaces.getFace(faceName);
+        
+        if (faceData) {
+          console.log(`[BUTTON] Tapped: ${faceData.label} (${faceName})`);
+          handleFaceAction(faceName, faceData.label);
+        }
+      });
+      
+      console.log('[MAIN] Click listener added to', button.getAttribute('data-face'), 'button');
+    });
+  }, 2000);
   
   // Handle actions for each face button
   const handleFaceAction = (faceName, label) => {
