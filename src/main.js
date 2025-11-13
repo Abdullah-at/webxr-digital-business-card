@@ -6,8 +6,9 @@ import tri2URL     from '/assets/Triangles2.png';
 import tri3URL     from '/assets/Triangles3.png';
 import tri4URL     from '/assets/Triangles4.png';
 
-// Import Cube Controller
+// Import Cube Controller and Faces
 import { CubeController } from './cubeController.js';
+import { CubeFaces } from './cubeFaces.js';
 
 // ---------- Alignment knobs ----------
 const FIT = {
@@ -152,6 +153,11 @@ window.addEventListener('DOMContentLoaded', () => {
   // Initialize the cube controller with Three.js-based rotation
   const cubeController = new CubeController(cube);
   console.log('[MAIN] CubeController initialized');
+  
+  // ---------- Cube Faces (Interactive Buttons) ----------
+  // Add button labels to each face of the cube
+  const cubeFaces = new CubeFaces(cube, markerRoot);
+  console.log('[MAIN] CubeFaces initialized with markerRoot');
 
   // ---------- Sequence logic ----------
   let fadeTimer = null;
@@ -248,22 +254,29 @@ window.addEventListener('DOMContentLoaded', () => {
   };
 
   // ---------- Cube Face Click Detection ----------
+  // Add raycaster to camera for cube detection
+  const camera = document.querySelector('a-camera');
+  if (camera) {
+    camera.setAttribute('raycaster', 'objects: .clickable');
+    console.log('[MAIN] Raycaster configured');
+  }
+  
+  // Listen for clicks directly on the cube GLB model
   cube.addEventListener('click', (e) => {
-    // Use controller to check if this was a tap or drag
+    console.log('[CUBE] Cube clicked!', e.detail);
+    
+    // Check if this was a quick tap (not drag rotation)
     if (!cubeController.wasQuickTap()) {
-      console.log('[CUBE] Ignoring click - was a drag');
+      console.log('[CUBE] Ignoring - was a drag');
       return;
     }
     
     const intersection = e.detail?.intersection;
-    if (!intersection) {
-      console.warn('[CUBE] No intersection data');
-      return;
-    }
+    if (!intersection) return;
     
     const normal = intersection.face?.normal;
     if (!normal) {
-      console.warn('[CUBE] No face normal data');
+      console.warn('[CUBE] No face normal - clicking might work but cant detect which face');
       return;
     }
     
@@ -272,35 +285,75 @@ window.addEventListener('DOMContentLoaded', () => {
     const absY = Math.abs(normal.y);
     const absZ = Math.abs(normal.z);
     
-    let face = 'unknown';
+    let faceName = 'unknown';
     if (absX > absY && absX > absZ) {
-      face = normal.x > 0 ? 'right' : 'left';
+      faceName = normal.x > 0 ? 'right' : 'left';
     } else if (absY > absX && absY > absZ) {
-      face = normal.y > 0 ? 'top' : 'bottom';
+      faceName = normal.y > 0 ? 'top' : 'bottom';
     } else if (absZ > absX && absZ > absY) {
-      face = normal.z > 0 ? 'front' : 'back';
+      faceName = normal.z > 0 ? 'front' : 'back';
     }
     
-    console.log(`[CUBE] Face tapped: ${face}`, normal);
-    
-    // Map faces to content
-    switch(face) {
-      case 'front':
-        showContent('about', './assets/Art.png');
-        break;
-      case 'right':
-        showContent('journal', './assets/Journal.png');
-        break;
-      case 'back':
-        showContent('career', './assets/Career.png');
-        break;
-      case 'left':
-        showContent('project', './assets/Project.png');
-        break;
-      case 'top':
-      case 'bottom':
-        resetToDefault();
-        break;
+    const faceData = cubeFaces.getFace(faceName);
+    if (faceData) {
+      console.log(`[CUBE] Face tapped: ${faceData.label} (${faceName})`);
+      handleFaceAction(faceName, faceData.label);
     }
   });
+  
+  // Handle actions for each face button
+  const handleFaceAction = (faceName, label) => {
+    console.log(`[CUBE] Action for ${label}`);
+    
+    switch(faceName) {
+      case 'right': // WhatsApp
+        console.log('[CUBE] Saving contact...');
+        
+        // Create vCard
+        const vCardData = `BEGIN:VCARD
+VERSION:3.0
+FN:Abdullah Barzinji
+N:Barzinji;Abdullah;;;
+TEL;TYPE=CELL:+41787414241
+ORG:WebXR Designer
+END:VCARD`;
+        
+        // Use data URL for better mobile compatibility
+        const dataUrl = 'data:text/vcard;charset=utf-8,' + encodeURIComponent(vCardData);
+        
+        // Create and trigger download
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = 'Abdullah_Barzinji.vcf';
+        link.style.display = 'none';
+        
+        document.body.appendChild(link);
+        
+        // Force click on mobile
+        if ('click' in link) {
+          link.click();
+        } else {
+          // Fallback for some mobile browsers
+          const event = document.createEvent('MouseEvents');
+          event.initEvent('click', true, true);
+          link.dispatchEvent(event);
+        }
+        
+        setTimeout(() => {
+          document.body.removeChild(link);
+        }, 100);
+        
+        console.log('[CUBE] vCard download triggered for +41787414241');
+        break;
+        
+      case 'left': // LinkedIn
+        console.log('[CUBE] Opening LinkedIn...');
+        window.open('https://linkedin.com/in/abdullah-barzinji', '_blank');
+        break;
+        
+      default:
+        console.log(`[CUBE] No action for ${faceName}`);
+        break;
+    }
+  };
 });
