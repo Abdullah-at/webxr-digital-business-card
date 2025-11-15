@@ -67,12 +67,133 @@ window.addEventListener('DOMContentLoaded', () => {
   artLayer.setAttribute('material', 'opacity:0');
   artLayer.setAttribute('src', artURL);
   
-  const waveLayer = makeLayer('waveLayer', 0.008);
-  waveLayer.setAttribute('visible', false);
-  waveLayer.setAttribute('material', 'opacity:0');
-  waveLayer.setAttribute('src', waveURL);
+  // Create 4 wave layers matching CSS footer (like your website)
+  // Wave 1: opacity 1, animateWave (1000px -> 0px), 4s
+  const waveLayer1 = makeLayer('waveLayer1', 0.008);
+  waveLayer1.setAttribute('visible', false);
+  waveLayer1.setAttribute('material', 'opacity:0; transparent:true; alphaTest:0.01; side:double');
+  waveLayer1.setAttribute('src', waveURL);
   
-  const aboutMeLayer = makeLayer('aboutMeLayer', 0.009);
+  // Wave 2: opacity 0.5, animateWave_02 (0px -> 1000px), 4s
+  const waveLayer2 = makeLayer('waveLayer2', 0.0085);
+  waveLayer2.setAttribute('visible', false);
+  waveLayer2.setAttribute('material', 'opacity:0; transparent:true; alphaTest:0.01; side:double');
+  waveLayer2.setAttribute('src', waveURL);
+  
+  // Wave 3: opacity 0.2, animateWave (1000px -> 0px), 3s
+  const waveLayer3 = makeLayer('waveLayer3', 0.009);
+  waveLayer3.setAttribute('visible', false);
+  waveLayer3.setAttribute('material', 'opacity:0; transparent:true; alphaTest:0.01; side:double');
+  waveLayer3.setAttribute('src', waveURL);
+  
+  // Wave 4: opacity 0.7, animateWave_02 (0px -> 1000px), 3s
+  const waveLayer4 = makeLayer('waveLayer4', 0.0095);
+  waveLayer4.setAttribute('visible', false);
+  waveLayer4.setAttribute('material', 'opacity:0; transparent:true; alphaTest:0.01; side:double');
+  waveLayer4.setAttribute('src', waveURL);
+  
+  const waveLayers = [
+    { el: waveLayer1, opacity: 1.0, direction: -1, duration: 4000, offset: 1.0 },   // animateWave: 1000px -> 0px
+    { el: waveLayer2, opacity: 0.5, direction: 1, duration: 4000, offset: 0.0 },  // animateWave_02: 0px -> 1000px
+    { el: waveLayer3, opacity: 0.2, direction: -1, duration: 3000, offset: 1.0 },  // animateWave: 1000px -> 0px
+    { el: waveLayer4, opacity: 0.7, direction: 1, duration: 3000, offset: 0.0 }   // animateWave_02: 0px -> 1000px
+  ];
+  
+  // Setup texture tiling and animation for each wave
+  waveLayers.forEach((wave, index) => {
+    const el = wave.el;
+    
+    // Initialize texture when loaded
+    const initTexture = () => {
+      const mesh = el.object3D.children[0];
+      if (mesh && mesh.material) {
+        const THREE = window.THREE;
+        if (THREE && mesh.material.map) {
+          mesh.material.map.wrapS = THREE.RepeatWrapping;
+          mesh.material.map.wrapT = THREE.RepeatWrapping;
+          // background-size: 1000px 100px equivalent (tile 2x horizontally)
+          mesh.material.map.repeat.set(2, 1);
+          // Set initial offset (1000px = 1.0 in normalized coordinates)
+          mesh.material.map.offset.set(wave.offset, 0);
+          mesh.material.map.needsUpdate = true;
+          console.log(`[WAVE ${index + 1}] Texture initialized, offset: ${wave.offset}`);
+        }
+      }
+    };
+    
+    el.addEventListener('loaded', initTexture);
+    el.addEventListener('object3dset', initTexture);
+    setTimeout(initTexture, 500);
+    
+    // Fade animations
+    el.setAttribute('animation__fadein', 
+      `property: material.opacity; from: 0; to: ${wave.opacity}; dur: 800; easing: easeInOutQuad; startEvents: show-wave`);
+    el.setAttribute('animation__fadeout', 
+      `property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-wave`);
+  });
+  
+  // Wave animation loop (CSS background-position animation equivalent)
+  let waveAnimationId = null;
+  let waveAnimationRunning = false;
+  
+  const animateWaves = () => {
+    if (!waveAnimationRunning) return;
+    
+    const now = performance.now();
+    let hasVisibleWaves = false;
+    
+    waveLayers.forEach((wave, index) => {
+      const el = wave.el;
+      if (el.getAttribute('visible') === 'true' || el.getAttribute('visible') === true) {
+        hasVisibleWaves = true;
+        const mesh = el.object3D.children[0];
+        
+        if (mesh && mesh.material && mesh.material.map) {
+          if (!wave.lastTime) wave.lastTime = now;
+          
+          const delta = now - wave.lastTime;
+          wave.lastTime = now;
+          
+          // Animate offset: direction -1 goes from 1.0 to 0.0, direction 1 goes from 0.0 to 1.0
+          // Speed = 1.0 (full cycle) / duration in ms
+          const speed = (1.0 / wave.duration) * delta;
+          wave.offset += wave.direction * speed;
+          
+          // Wrap around for seamless loop
+          if (wave.offset >= 1.0) wave.offset -= 1.0;
+          if (wave.offset < 0.0) wave.offset += 1.0;
+          
+          // Apply offset (equivalent to CSS background-position)
+          mesh.material.map.offset.set(wave.offset, 0);
+          mesh.material.map.needsUpdate = true;
+        }
+      }
+    });
+    
+    if (waveAnimationRunning) {
+      waveAnimationId = requestAnimationFrame(animateWaves);
+    }
+  };
+  
+  const startWaveAnimation = () => {
+    if (!waveAnimationRunning) {
+      waveAnimationRunning = true;
+      waveLayers.forEach(wave => wave.lastTime = null);
+      animateWaves();
+      console.log('[WAVES] Animation started');
+    }
+  };
+  
+  const stopWaveAnimation = () => {
+    waveAnimationRunning = false;
+    if (waveAnimationId) {
+      cancelAnimationFrame(waveAnimationId);
+      waveAnimationId = null;
+    }
+    console.log('[WAVES] Animation stopped');
+  };
+  
+  const aboutMeLayer = makeLayer('aboutMeLayer', 0.010);
   aboutMeLayer.setAttribute('visible', false);
   aboutMeLayer.setAttribute('material', 'opacity:0');
   aboutMeLayer.setAttribute('src', aboutMeURL);
@@ -80,9 +201,6 @@ window.addEventListener('DOMContentLoaded', () => {
   // Fade animations for About Me sequence layers
   artLayer.setAttribute('animation__fadein', 'property: material.opacity; from: 0; to: 1; dur: 800; easing: easeInOutQuad; startEvents: show-art');
   artLayer.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-art');
-  
-  waveLayer.setAttribute('animation__fadein', 'property: material.opacity; from: 0; to: 1; dur: 800; easing: easeInOutQuad; startEvents: show-wave');
-  waveLayer.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-wave');
   
   aboutMeLayer.setAttribute('animation__fadein', 'property: material.opacity; from: 0; to: 1; dur: 800; easing: easeInOutQuad; startEvents: show-aboutme');
   aboutMeLayer.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-aboutme');
@@ -200,8 +318,14 @@ window.addEventListener('DOMContentLoaded', () => {
     // Hide and reset About Me layers
     artLayer.setAttribute('visible', false);
     artLayer.setAttribute('material', 'opacity:0');
-    waveLayer.setAttribute('visible', false);
-    waveLayer.setAttribute('material', 'opacity:0');
+    stopWaveAnimation();
+    waveLayers.forEach(wave => {
+      wave.el.setAttribute('visible', false);
+      wave.el.setAttribute('material', 'opacity:0');
+      // Reset offset
+      wave.offset = wave.direction === -1 ? 1.0 : 0.0;
+      wave.lastTime = null;
+    });
     aboutMeLayer.setAttribute('visible', false);
     aboutMeLayer.setAttribute('material', 'opacity:0');
     
@@ -266,8 +390,20 @@ window.addEventListener('DOMContentLoaded', () => {
     // Hide and reset About Me layers (Art, Wave, AboutMe)
     artLayer.setAttribute('visible', false);
     artLayer.setAttribute('material', 'opacity:0');
-    waveLayer.setAttribute('visible', false);
-    waveLayer.setAttribute('material', 'opacity:0');
+    stopWaveAnimation();
+    waveLayers.forEach(wave => {
+      wave.el.setAttribute('visible', false);
+      wave.el.setAttribute('material', 'opacity:0');
+      // Reset offset
+      wave.offset = wave.direction === -1 ? 1.0 : 0.0;
+      wave.lastTime = null;
+      // Reset texture offset in material
+      const mesh = wave.el.object3D.children[0];
+      if (mesh && mesh.material && mesh.material.map) {
+        mesh.material.map.offset.set(wave.offset, 0);
+        mesh.material.map.needsUpdate = true;
+      }
+    });
     aboutMeLayer.setAttribute('visible', false);
     aboutMeLayer.setAttribute('material', 'opacity:0');
     
@@ -450,19 +586,38 @@ END:VCARD`;
         artLayer.emit('show-art');
         console.log('[HUD] Art.png fading in (will stay visible)');
         
-        // After Art fades in (800ms), fade in wave.png (keep Art visible)
+        // After Art fades in (800ms), fade in all 4 wave layers (keep Art visible)
         const timer2 = setTimeout(() => {
-          waveLayer.setAttribute('visible', true);
-          waveLayer.setAttribute('material', 'opacity:0');
-          waveLayer.emit('show-wave');
-          console.log('[HUD] wave.png fading in (will stay visible with Art)');
+          // Show all 4 wave layers
+          waveLayers.forEach((wave, index) => {
+            wave.el.setAttribute('visible', true);
+            wave.el.setAttribute('material', `opacity:0; transparent:true; alphaTest:0.01; side:double`);
+            // Reset offset to start position
+            wave.offset = wave.direction === -1 ? 1.0 : 0.0;
+            wave.lastTime = null;
+            // Initialize texture offset if ready
+            const mesh = wave.el.object3D.children[0];
+            if (mesh && mesh.material && mesh.material.map) {
+              mesh.material.map.offset.set(wave.offset, 0);
+              mesh.material.map.needsUpdate = true;
+            }
+            wave.el.emit('show-wave');
+            console.log(`[WAVE ${index + 1}] Showing: opacity ${wave.opacity}, direction ${wave.direction > 0 ? 'right' : 'left'}, duration ${wave.duration}ms`);
+          });
           
-          // After wave fades in (800ms), fade in AboutMe.png (keep Art and Wave visible)
+          // Start wave animation after a short delay
+          setTimeout(() => {
+            startWaveAnimation();
+          }, 100);
+          
+          console.log('[HUD] 4 wave layers fading in and animating (CSS-style)');
+          
+          // After wave fades in (800ms), fade in AboutMe.png (keep Art and Waves visible)
           const timer3 = setTimeout(() => {
             aboutMeLayer.setAttribute('visible', true);
             aboutMeLayer.setAttribute('material', 'opacity:0');
             aboutMeLayer.emit('show-aboutme');
-            console.log('[HUD] AboutMe.png fading in (all three layers now visible)');
+            console.log('[HUD] AboutMe.png fading in (all layers now visible with animated waves)');
           }, 800); // Wait for wave fade in
           aboutMeTimers.push(timer3);
         }, 800); // Wait for Art fade in
