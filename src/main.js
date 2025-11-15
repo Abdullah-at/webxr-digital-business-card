@@ -93,11 +93,13 @@ window.addEventListener('DOMContentLoaded', () => {
   waveLayer4.setAttribute('src', waveURL);
   
   const waveLayers = [
-    { el: waveLayer1, opacity: 1.0, direction: -1, duration: 4000, offset: 1.0 },   // animateWave: 1000px -> 0px
-    { el: waveLayer2, opacity: 0.5, direction: 1, duration: 4000, offset: 0.0 },  // animateWave_02: 0px -> 1000px
-    { el: waveLayer3, opacity: 0.2, direction: -1, duration: 3000, offset: 1.0 },  // animateWave: 1000px -> 0px
-    { el: waveLayer4, opacity: 0.7, direction: 1, duration: 3000, offset: 0.0 }   // animateWave_02: 0px -> 1000px
+    { el: waveLayer1, opacity: 1.0, direction: -1, duration: 4000, offset: 2.0 },   // animateWave: 1000px -> 0px (with repeat 2, need 2.0 to 0.0)
+    { el: waveLayer2, opacity: 0.5, direction: 1, duration: 4000, offset: 0.0 },  // animateWave_02: 0px -> 1000px (with repeat 2, need 0.0 to 2.0)
+    { el: waveLayer3, opacity: 0.2, direction: -1, duration: 3000, offset: 2.0 },  // animateWave: 1000px -> 0px (with repeat 2, need 2.0 to 0.0)
+    { el: waveLayer4, opacity: 0.7, direction: 1, duration: 3000, offset: 0.0 }   // animateWave_02: 0px -> 1000px (with repeat 2, need 0.0 to 2.0)
   ];
+  
+  const TEXTURE_REPEAT = 2; // Match CSS background-size: 1000px (repeated 2x)
   
   // Setup texture tiling and animation for each wave
   waveLayers.forEach((wave, index) => {
@@ -112,11 +114,14 @@ window.addEventListener('DOMContentLoaded', () => {
           mesh.material.map.wrapS = THREE.RepeatWrapping;
           mesh.material.map.wrapT = THREE.RepeatWrapping;
           // background-size: 1000px 100px equivalent (tile 2x horizontally)
-          mesh.material.map.repeat.set(2, 1);
-          // Set initial offset (1000px = 1.0 in normalized coordinates)
+          // This ensures seamless tiling like CSS background-size
+          mesh.material.map.repeat.set(TEXTURE_REPEAT, 1);
+          // Set initial offset (with repeat 2, full cycle is 0.0 to 2.0)
+          // animateWave: starts at 2.0 (1000px), animateWave_02: starts at 0.0 (0px)
           mesh.material.map.offset.set(wave.offset, 0);
           mesh.material.map.needsUpdate = true;
-          console.log(`[WAVE ${index + 1}] Texture initialized, offset: ${wave.offset}`);
+          mesh.material.needsUpdate = true;
+          console.log(`[WAVE ${index + 1}] Texture initialized, repeat: ${TEXTURE_REPEAT}, offset: ${wave.offset}`);
         }
       }
     };
@@ -154,14 +159,21 @@ window.addEventListener('DOMContentLoaded', () => {
           const delta = now - wave.lastTime;
           wave.lastTime = now;
           
-          // Animate offset: direction -1 goes from 1.0 to 0.0, direction 1 goes from 0.0 to 1.0
-          // Speed = 1.0 (full cycle) / duration in ms
-          const speed = (1.0 / wave.duration) * delta;
+          // Animate offset: with repeat 2, full cycle is from 0.0 to 2.0
+          // direction -1: animateWave (starts at 2.0, goes to 0.0)
+          // direction 1: animateWave_02 (starts at 0.0, goes to 2.0)
+          // Speed = 2.0 (full cycle with repeat 2) / duration in ms
+          const fullCycle = TEXTURE_REPEAT; // 2.0 for full cycle
+          const speed = (fullCycle / wave.duration) * delta;
           wave.offset += wave.direction * speed;
           
-          // Wrap around for seamless loop
-          if (wave.offset >= 1.0) wave.offset -= 1.0;
-          if (wave.offset < 0.0) wave.offset += 1.0;
+          // Wrap around for seamless loop (0.0 to 2.0 range)
+          if (wave.offset >= fullCycle) {
+            wave.offset -= fullCycle;
+          }
+          if (wave.offset < 0.0) {
+            wave.offset += fullCycle;
+          }
           
           // Apply offset (equivalent to CSS background-position)
           mesh.material.map.offset.set(wave.offset, 0);
@@ -193,7 +205,9 @@ window.addEventListener('DOMContentLoaded', () => {
     console.log('[WAVES] Animation stopped');
   };
   
-  const aboutMeLayer = makeLayer('aboutMeLayer', 0.010);
+  // AboutMe layer should be BEHIND the waves so the blue footer line doesn't appear in front
+  // Position it before the last wave layer (waveLayer4 is at 0.0095, so put AboutMe at 0.0075 - behind all waves)
+  const aboutMeLayer = makeLayer('aboutMeLayer', 0.0075);
   aboutMeLayer.setAttribute('visible', false);
   aboutMeLayer.setAttribute('material', 'opacity:0');
   aboutMeLayer.setAttribute('src', aboutMeURL);
@@ -322,8 +336,8 @@ window.addEventListener('DOMContentLoaded', () => {
     waveLayers.forEach(wave => {
       wave.el.setAttribute('visible', false);
       wave.el.setAttribute('material', 'opacity:0');
-      // Reset offset
-      wave.offset = wave.direction === -1 ? 1.0 : 0.0;
+      // Reset offset (with repeat 2, animateWave starts at 2.0, animateWave_02 at 0.0)
+      wave.offset = wave.direction === -1 ? TEXTURE_REPEAT : 0.0;
       wave.lastTime = null;
     });
     aboutMeLayer.setAttribute('visible', false);
@@ -347,7 +361,7 @@ window.addEventListener('DOMContentLoaded', () => {
       [base,text,t1,t2,t3,t4].forEach(el => el.setAttribute('visible', true));
       text.setAttribute('material', 'opacity:1');
       [t1,t2,t3,t4].forEach(el => el.emit('pulse-start'));
-      fadeTimer = setTimeout(() => text.emit('start-fade'), 10000);
+      // Removed automatic fade out of Card_text.png
       
       // Show interactive cube
       cube.setAttribute('visible', true);
@@ -358,7 +372,7 @@ window.addEventListener('DOMContentLoaded', () => {
       const hud = document.getElementById('hud');
       if (hud) {
         hud.classList.add('active');
-        console.log('[HUD] Buttons shown after 7 seconds');
+        console.log('[HUD] Buttons shown after 6 seconds');
       }
     }, 7000);
   };
@@ -394,8 +408,8 @@ window.addEventListener('DOMContentLoaded', () => {
     waveLayers.forEach(wave => {
       wave.el.setAttribute('visible', false);
       wave.el.setAttribute('material', 'opacity:0');
-      // Reset offset
-      wave.offset = wave.direction === -1 ? 1.0 : 0.0;
+      // Reset offset (with repeat 2, animateWave starts at 2.0, animateWave_02 at 0.0)
+      wave.offset = wave.direction === -1 ? TEXTURE_REPEAT : 0.0;
       wave.lastTime = null;
       // Reset texture offset in material
       const mesh = wave.el.object3D.children[0];
@@ -592,8 +606,8 @@ END:VCARD`;
           waveLayers.forEach((wave, index) => {
             wave.el.setAttribute('visible', true);
             wave.el.setAttribute('material', `opacity:0; transparent:true; alphaTest:0.01; side:double`);
-            // Reset offset to start position
-            wave.offset = wave.direction === -1 ? 1.0 : 0.0;
+            // Reset offset to start position (with repeat 2, animateWave starts at 2.0, animateWave_02 at 0.0)
+            wave.offset = wave.direction === -1 ? TEXTURE_REPEAT : 0.0;
             wave.lastTime = null;
             // Initialize texture offset if ready
             const mesh = wave.el.object3D.children[0];
