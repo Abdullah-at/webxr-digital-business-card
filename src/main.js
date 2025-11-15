@@ -5,6 +5,9 @@ import tri1URL     from '/assets/Triangles1.png';
 import tri2URL     from '/assets/Triangles2.png';
 import tri3URL     from '/assets/Triangles3.png';
 import tri4URL     from '/assets/Triangles4.png';
+import artURL      from '/assets/Art.png';
+import waveURL     from '/assets/wave.png';
+import aboutMeURL  from '/assets/AboutMe.png';
 
 // Import Cube Controller and Faces
 import { CubeController } from './cubeController.js';
@@ -57,6 +60,32 @@ window.addEventListener('DOMContentLoaded', () => {
   // Content layer (sits above base, replaces text/triangles when cube face tapped)
   const content = makeLayer('cardContent', 0.006);
   content.setAttribute('visible', false);
+  
+  // About Me sequence layers
+  const artLayer = makeLayer('artLayer', 0.007);
+  artLayer.setAttribute('visible', false);
+  artLayer.setAttribute('material', 'opacity:0');
+  artLayer.setAttribute('src', artURL);
+  
+  const waveLayer = makeLayer('waveLayer', 0.008);
+  waveLayer.setAttribute('visible', false);
+  waveLayer.setAttribute('material', 'opacity:0');
+  waveLayer.setAttribute('src', waveURL);
+  
+  const aboutMeLayer = makeLayer('aboutMeLayer', 0.009);
+  aboutMeLayer.setAttribute('visible', false);
+  aboutMeLayer.setAttribute('material', 'opacity:0');
+  aboutMeLayer.setAttribute('src', aboutMeURL);
+  
+  // Fade animations for About Me sequence layers
+  artLayer.setAttribute('animation__fadein', 'property: material.opacity; from: 0; to: 1; dur: 800; easing: easeInOutQuad; startEvents: show-art');
+  artLayer.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-art');
+  
+  waveLayer.setAttribute('animation__fadein', 'property: material.opacity; from: 0; to: 1; dur: 800; easing: easeInOutQuad; startEvents: show-wave');
+  waveLayer.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-wave');
+  
+  aboutMeLayer.setAttribute('animation__fadein', 'property: material.opacity; from: 0; to: 1; dur: 800; easing: easeInOutQuad; startEvents: show-aboutme');
+  aboutMeLayer.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-aboutme');
 
   // Apply textures
   base.setAttribute('src', cardBaseURL);
@@ -105,7 +134,7 @@ window.addEventListener('DOMContentLoaded', () => {
   cube.setAttribute('gltf-model', '#cubeModel');
   // Position below the card with clear separation
   cube.setAttribute('position', '0 -1.2 0');
-  cube.setAttribute('scale', '0.03 0.03 0.03');
+  cube.setAttribute('scale', '0.02 0.02 0.02');
   cube.setAttribute('visible', 'false');
   // Enable 360° rotation interaction
   cube.setAttribute('class', 'clickable');
@@ -161,11 +190,20 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // ---------- Sequence logic ----------
   let fadeTimer = null;
+  let aboutMeTimers = []; // Store About Me animation timers to clear on reset
 
   const startSequence = () => {
     // Hide the card and cube at first
     [base,text,t1,t2,t3,t4].forEach(el => el.setAttribute('visible', false));
     cube.setAttribute('visible', false);
+    
+    // Hide and reset About Me layers
+    artLayer.setAttribute('visible', false);
+    artLayer.setAttribute('material', 'opacity:0');
+    waveLayer.setAttribute('visible', false);
+    waveLayer.setAttribute('material', 'opacity:0');
+    aboutMeLayer.setAttribute('visible', false);
+    aboutMeLayer.setAttribute('material', 'opacity:0');
     
     // Reset and play GLB baked animation from the start (wait if still loading)
     const play = () => {
@@ -190,21 +228,68 @@ window.addEventListener('DOMContentLoaded', () => {
       // Show interactive cube
       cube.setAttribute('visible', true);
     }, 6000);
+    
+    // After 7 seconds, show HUD buttons (1 second after cube appears)
+    setTimeout(() => {
+      const hud = document.getElementById('hud');
+      if (hud) {
+        hud.classList.add('active');
+        console.log('[HUD] Buttons shown after 7 seconds');
+      }
+    }, 7000);
   };
 
   const stopSequence = () => {
     if (fadeTimer) { clearTimeout(fadeTimer); fadeTimer = null; }
-    [t1,t2,t3,t4].forEach(el => el.emit('pulse-stop'));
+    
+    // Clear all About Me animation timers
+    aboutMeTimers.forEach(timer => clearTimeout(timer));
+    aboutMeTimers = [];
+    
+    // Reset triangles - stop pulses and restore opacity
+    [t1,t2,t3,t4].forEach(el => {
+      el.emit('pulse-stop');
+      el.setAttribute('material', 'opacity:0.5');
+      el.setAttribute('visible', false);
+    });
+    
+    // Reset text layer
     text.setAttribute('material', 'opacity:1');
+    text.setAttribute('visible', false);
+    
+    // Hide base layer
+    base.setAttribute('visible', false);
+    
     // Hide cube when target lost
     cube.setAttribute('visible', false);
+    
+    // Hide and reset About Me layers (Art, Wave, AboutMe)
+    artLayer.setAttribute('visible', false);
+    artLayer.setAttribute('material', 'opacity:0');
+    waveLayer.setAttribute('visible', false);
+    waveLayer.setAttribute('material', 'opacity:0');
+    aboutMeLayer.setAttribute('visible', false);
+    aboutMeLayer.setAttribute('material', 'opacity:0');
+    
+    // Hide HUD buttons when target lost
+    const hud = document.getElementById('hud');
+    if (hud) {
+      hud.classList.remove('active');
+    }
+    
     // Stop any cube rotation
     cubeController.stopRotation();
+    
+    // Reset cube rotation to initial state
+    cubeController.resetRotation();
+    
     // Pause animation when target lost
     const mixer = ufo.components['animation-mixer'];
     if (mixer) {
       ufo.setAttribute('animation-mixer', 'clip: *; loop: once; repetitions: 1; timeScale: 0');
     }
+    
+    console.log('[RESET] All layers and content reset when target lost');
   };
 
   markerRoot.addEventListener('targetFound', startSequence);
@@ -338,4 +423,59 @@ END:VCARD`;
         break;
     }
   };
+  
+  // ---------- HUD Button Handlers ----------
+  const btnAboutMe = document.getElementById('btn-1');
+  const btnJournal = document.getElementById('btn-2');
+  
+  if (btnAboutMe) {
+    btnAboutMe.addEventListener('click', () => {
+      console.log('[HUD] About Me button clicked');
+      
+      // Clear any existing About Me timers
+      aboutMeTimers.forEach(timer => clearTimeout(timer));
+      aboutMeTimers = [];
+      
+      // Stop triangle pulses first
+      [t1, t2, t3, t4].forEach(el => el.emit('pulse-stop'));
+      
+      // Fade out all four triangles and Card_Text
+      text.emit('hide-text');
+      [t1, t2, t3, t4].forEach(el => el.emit('hide-triangles'));
+      
+      // Wait for triangles and text to fade out (800ms + 300ms buffer), then show Art.png
+      const timer1 = setTimeout(() => {
+        artLayer.setAttribute('visible', true);
+        artLayer.setAttribute('material', 'opacity:0');
+        artLayer.emit('show-art');
+        console.log('[HUD] Art.png fading in (will stay visible)');
+        
+        // After Art fades in (800ms), fade in wave.png (keep Art visible)
+        const timer2 = setTimeout(() => {
+          waveLayer.setAttribute('visible', true);
+          waveLayer.setAttribute('material', 'opacity:0');
+          waveLayer.emit('show-wave');
+          console.log('[HUD] wave.png fading in (will stay visible with Art)');
+          
+          // After wave fades in (800ms), fade in AboutMe.png (keep Art and Wave visible)
+          const timer3 = setTimeout(() => {
+            aboutMeLayer.setAttribute('visible', true);
+            aboutMeLayer.setAttribute('material', 'opacity:0');
+            aboutMeLayer.emit('show-aboutme');
+            console.log('[HUD] AboutMe.png fading in (all three layers now visible)');
+          }, 800); // Wait for wave fade in
+          aboutMeTimers.push(timer3);
+        }, 800); // Wait for Art fade in
+        aboutMeTimers.push(timer2);
+      }, 1100); // Wait for triangles and text fade out (800ms + 300ms buffer)
+      aboutMeTimers.push(timer1);
+    });
+  }
+  
+  if (btnJournal) {
+    btnJournal.addEventListener('click', () => {
+      console.log('[HUD] Journal button clicked');
+      // TODO: Implement Journal functionality
+    });
+  }
 });
