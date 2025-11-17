@@ -9,21 +9,28 @@ Once deployed to GitHub Pages, your app will be available at:
 
 ## 📱 How It Works
 
-1. **Print the Target Image**: Print the target image (`public/assets/tracker.png`) on your business card or any physical surface
-2. **Scan with Mobile**: Users open the GitHub Pages URL on their mobile browser
-3. **Point Camera**: Point the camera at the printed target image
-4. **AR Experience**: The AR content appears overlaid on the target image
+Your MindAR target image **IS your QR code** - it's the trigger that activates the AR experience!
 
-## 🎯 Target Image
+1. **Print the Target Image**: Print `public/assets/tracker.png` directly on your business card (this replaces a QR code)
+2. **Open the Web App**: Users visit your GitHub Pages URL on their mobile browser
+3. **Scan the Target**: Point the camera at the printed target image (just like scanning a QR code)
+4. **AR Experience**: The AR content automatically appears overlaid on the target image
+
+## 🎯 Target Image (Your "AR QR Code")
 
 The target image for AR tracking is located at:
-- `public/assets/tracker.png` - This is the image users need to scan
+- `public/assets/tracker.png` - **This is your AR trigger image (like a QR code)**
 
-**Important**: 
-- Print this image on your business card
-- Ensure good lighting when scanning
-- Keep the target image flat and visible
-- The image should be at least 2-3 inches in size for best tracking
+**How to Use:**
+- ✅ Print this image directly on your business card (front or back)
+- ✅ It works just like a QR code - users scan it with their camera
+- ✅ The image should be at least 2-3 inches (5-7 cm) in size
+- ✅ Ensure good contrast and lighting for best tracking
+- ✅ Keep the target flat and clearly visible when scanning
+
+**Difference from QR Code:**
+- QR Code: Opens a website URL
+- MindAR Target: Triggers AR content directly (no URL needed once app is open)
 
 ## 🛠️ Setup & Deployment
 
