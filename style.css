@@ -1,18 +1,15 @@
 /* ----------------------------
    GLOBAL + A-FRAME CANVAS
 ---------------------------- */
-
-/* Transparent background, full-height layout on all browsers */
 html, body {
   margin: 0;
   padding: 0;
   background: transparent;
-  height: 100svh;                /* “small viewport” height fixes iOS Safari toolbar jump */
+  height: 100svh;               /* fixes iOS toolbar jump */
   overflow: hidden;
-  touch-action: none;            /* prevents pinch-zoom / pull gestures over AR canvas */
+  touch-action: none;           /* no pinch/scroll on AR */
 }
 
-/* Scene fills entire viewport (video + camera) */
 a-scene {
   position: fixed;
   inset: 0;
@@ -20,43 +17,36 @@ a-scene {
   height: 100svh;
 }
 
-/* Force underlying A-Frame video + canvas layers to fill screen (no white half) */
-/* Force camera feed to fill the screen with no gaps */
+/* Fill screen, no white edges */
 canvas,
 .a-canvas,
 video {
   position: fixed !important;
-  inset: 0 !important;          /* top/right/bottom/left = 0 */
+  inset: 0 !important;
   width: 100vw !important;
-  height: 100svh !important;    /* iOS toolbar-safe height */
+  height: 100svh !important;
   max-width: none !important;
   max-height: none !important;
   object-fit: cover !important;
-  background: #0000 !important; /* transparent */
+  background: transparent !important;
 }
 
-/* Also ensure the page itself can’t scroll a single pixel */
-:root, html, body { overflow: hidden; width: 100vw; }
-
-
-/* Sharper 2D PNG rendering (avoids blur) */
 a-image {
   image-rendering: auto;
   transform-origin: center;
 }
 
-
 /* ----------------------------
    HUD (glass panel UI)
 ---------------------------- */
-
-/* Start hidden; becomes visible on targetFound (class "active") */
 #hud {
-  display: none;
-  pointer-events: none;                 /* don’t block camera taps */
+  display: none;                 /* shown only while tracked */
+  pointer-events: none;
   position: fixed;
-  inset: auto 16px 16px auto;           /* bottom-right corner */
-  width: 320px;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
   padding: 16px 18px;
   border-radius: 22px;
   background: rgba(255,255,255,0.12);
@@ -68,80 +58,52 @@ a-image {
   font: 14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   z-index: 10;
 }
+#hud.active { display: flex; pointer-events: auto; flex-direction: row; gap: 12px; align-items: center; }
 
-#hud.active {
-  display: block;
-  pointer-events: auto;
+.step { display: flex; align-items: center; gap: 12px; margin: 0; }
+.badge{
+  display: inline-grid; place-items: center;
+  width: 36px; height: 36px; border-radius: 10px;
+  background: #f49c2f; color: #fff; font-weight: 700;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.4);
 }
-
-/* Each HUD row */
-.step {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 12px 0;
+.pill{
+  flex: 1; height: 42px; padding: 0 16px;
+  border-radius: 14px; border: 1.5px solid rgba(255,255,255,.35);
+  background: rgba(0,0,0,.25); color: #fff;
+  cursor: pointer; transition: transform .08s ease, background .15s ease;
 }
-
-/* Number badge */
-.badge {
-  display: inline-grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: #f49c2f;
-  color: #fff;
-  font-weight: 700;
-  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.4);
-}
-
-/* Buttons */
-.pill {
-  flex: 1;
-  height: 42px;
-  padding: 0 16px;
-  border-radius: 14px;
-  border: 1.5px solid rgba(255,255,255,0.35);
-  background: rgba(0,0,0,0.25);
-  color: #fff;
-  cursor: pointer;
-  transition: transform 0.08s ease, background 0.15s ease;
-}
-.pill:hover { transform: translateY(-1px); background: rgba(255,255,255,0.12); }
+.pill:hover { transform: translateY(-1px); background: rgba(255,255,255,.12); }
 .pill:active{ transform: translateY(0); }
 
-/* ----------------------------
-   SAFE-AREA (for iPhones etc.)
----------------------------- */
+/* Safe-area breathing room on iPhones */
 @supports (padding: max(0px)) {
   #hud {
     margin-bottom: max(16px, env(safe-area-inset-bottom));
     margin-right:  max(16px, env(safe-area-inset-right));
   }
 }
-/* ---------------- LOADER ---------------- */
-#loader {
+
+/* ----------------------------
+   CUSTOM TRACKER OVERLAY
+---------------------------- */
+#tracker-overlay {
   position: fixed;
   inset: 0;
-  display: grid;
-  place-items: center;
-  background: rgba(0,0,0,0.25);       /* transparent black overlay */
-  backdrop-filter: blur(4px);
-  z-index: 20;
-  opacity: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   pointer-events: none;
-  transition: opacity .25s ease;
-}
-#loader.show {
-  opacity: 1;
-  pointer-events: auto;
+  z-index: 5;
+  opacity: 0.3; /* 30% transparency */
 }
 
-#loaderVid {
-  width: 90px;                        /* smaller size */
-  height: 90px;
-  border-radius: 50%;                 /* soft shape if video is round */
+#tracker-overlay img {
+  max-width: 80vw;
+  max-height: 80vh;
   object-fit: contain;
-  background: transparent;            /* remove black fill behind video */
-  filter: drop-shadow(0 0 8px rgba(0,255,255,0.6));
+}
+
+#tracker-overlay.hidden {
+  display: none;
 }
