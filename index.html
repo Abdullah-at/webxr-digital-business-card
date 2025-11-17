@@ -1,57 +1,57 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>WebXR Digital Business Card</title>
+  <!doctype html>
+  <html lang="en">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>WebXR Digital Business Card</title>
 
-    <!-- Styles -->
-    <link rel="stylesheet" href="/style.css" />
+      <!-- Styles -->
+      <link rel="stylesheet" href="/style.css" />
 
-    <!-- A-Frame + MindAR -->
-    <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/aframe-extras@7.5.2/dist/aframe-extras.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-  </head>
+      <!-- A-Frame + MindAR -->
+      <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/aframe-extras@7.5.2/dist/aframe-extras.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    </head>
 
-  <body>
-    <!-- Custom Tracker Overlay (shown while scanning) -->
-    <div id="tracker-overlay">
-      <img src="./assets/tracker.png" alt="Scan target">
-    </div>
+    <body>
+      <!-- Custom Tracker Overlay (shown while scanning) -->
+      <div id="tracker-overlay">
+        <img src="./assets/tracker.png" alt="Scan target">
+      </div>
 
-    <!-- HUD - COMMENTED OUT (replaced by 3D cube) -->
+      <!-- HUD - COMMENTED OUT (replaced by 3D cube) -->
+      
+      <div id="hud">
+        <div class="step"><button class="pill" id="btn-1">About Me</button></div>
+        <div class="step"><button class="pill" id="btn-2">Journal</button></div>
     
-    <div id="hud">
-      <div class="step"><button class="pill" id="btn-1">About Me</button></div>
-      <div class="step"><button class="pill" id="btn-2">Journal</button></div>
-  
-    </div>
-    
+      </div>
+      
 
-    <!-- WebAR scene -->
-    <a-scene
-      mindar-image="imageTargetSrc: ./targets.mind; filterMinCF: 0.001; filterBeta: 0; missTolerance: 30"
-      device-orientation-permission-ui="enabled: true"
-      vr-mode-ui="enabled: false"
-      renderer="alpha: true; colorManagement: true"
-      embedded>
+      <!-- WebAR scene -->
+      <a-scene
+        mindar-image="imageTargetSrc: targets.mind; filterMinCF: 0.001; filterBeta: 0; missTolerance: 30"
+        device-orientation-permission-ui="enabled: true"
+        vr-mode-ui="enabled: false"
+        renderer="alpha: true; colorManagement: true"
+        embedded>
 
-      <!-- Preload assets -->
-      <a-assets>
-        <!-- Your cleaned models exported from Blender -->
-        <a-asset-item id="ufoModel"  src="./assets/ufo/UFO.glb"></a-asset-item>
-        <a-asset-item id="cubeModel" src="./assets/ufo/cube.glb"></a-asset-item>
-      </a-assets>
+        <!-- Preload assets -->
+        <a-assets>
+          <!-- Your cleaned models exported from Blender -->
+          <a-asset-item id="ufoModel"  src="./assets/ufo/UFO.glb"></a-asset-item>
+          <a-asset-item id="cubeModel" src="./assets/ufo/cube.glb"></a-asset-item>
+        </a-assets>
 
-      <!-- MindAR camera -->
-      <a-camera look-controls="enabled: false"></a-camera>
+        <!-- MindAR camera -->
+        <a-camera look-controls="enabled: false"></a-camera>
 
-      <!-- Marker root: layers + UFO will be added by main.js -->
-      <a-entity mindar-image-target="targetIndex: 0" id="markerRoot"></a-entity>
-    </a-scene>
+        <!-- Marker root: layers + UFO will be added by main.js -->
+        <a-entity mindar-image-target="targetIndex: 0" id="markerRoot"></a-entity>
+      </a-scene>
 
-    <!-- App -->
-    <script type="module" src="/src/main.js"></script>
-  </body>
-</html>
+      <!-- App -->
+      <script type="module" src="/src/main.js"></script>
+    </body>
+  </html>
