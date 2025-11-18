@@ -39,15 +39,23 @@ export class CubeFaces {
     const buttonSize = 24; // Size in cube's local units
     
     setTimeout(() => {
+      // Get base path (always set to /webxr-digital-business-card)
+      const basePath = window.AR_BASE_PATH || '/webxr-digital-business-card';
+      
+      // Build paths with base path
+      const linkedinSrc = `${basePath}/assets/linkedin.png`;
+      const whatsappSrc = `${basePath}/assets/Whatsapp.png`;
+      
       // Left side - LinkedIn
-      this.createImageButton('left', 'LinkedIn', './assets/linkedin.png', 
+      this.createImageButton('left', 'LinkedIn', linkedinSrc, 
         `${-sideDistance} 0 0`, '0 -90 0', buttonSize);
       
       // Right side - WhatsApp  
-      this.createImageButton('right', 'WhatsApp', './assets/Whatsapp.png', 
+      this.createImageButton('right', 'WhatsApp', whatsappSrc, 
         `${sideDistance} 0 0`, '0 90 0', buttonSize);
       
       console.log('[CubeFaces] 2 buttons created - LEFT: LinkedIn, RIGHT: WhatsApp');
+      console.log('[CubeFaces] LinkedIn path:', linkedinSrc, 'WhatsApp path:', whatsappSrc);
     }, 1000);
   }
   

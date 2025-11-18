@@ -5,8 +5,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>WebXR Digital Business Card</title>
 
-      <!-- Styles -->
-      <link rel="stylesheet" href="/style.css" />
+      <!-- Styles - imported in main.js -->
 
       <!-- A-Frame + MindAR -->
       <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
@@ -17,7 +16,7 @@
     <body>
       <!-- Custom Tracker Overlay (shown while scanning) -->
       <div id="tracker-overlay">
-        <img src="./assets/tracker.png" alt="Scan target">
+        <img id="tracker-img" src="" alt="Scan target">
       </div>
 
       <!-- HUD - COMMENTED OUT (replaced by 3D cube) -->
@@ -29,9 +28,30 @@
       </div>
       
 
+      <!-- App -->
+      <script>
+        // Detect base path - works for both localhost (Vite dev) and GitHub Pages
+        const hostname = window.location.hostname;
+        const pathname = window.location.pathname;
+        const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('192.168') || hostname.includes('.local');
+        // Vite uses base path even in dev, so always use it
+        const BASE_PATH = '/webxr-digital-business-card';
+        window.AR_BASE_PATH = BASE_PATH;
+        
+        console.log('[INIT] Base path:', BASE_PATH, 'hostname:', hostname, 'pathname:', pathname);
+        
+        // Set tracker image immediately
+        const trackerImg = document.getElementById('tracker-img');
+        if (trackerImg) {
+          trackerImg.src = `${BASE_PATH}/assets/tracker.png`;
+          console.log('[INIT] Tracker image:', trackerImg.src);
+        }
+      </script>
+
       <!-- WebAR scene -->
       <a-scene
-        mindar-image="imageTargetSrc: targets.mind; filterMinCF: 0.001; filterBeta: 0; missTolerance: 30"
+        id="ar-scene"
+        mindar-image="imageTargetSrc: /webxr-digital-business-card/targets.mind; filterMinCF: 0.001; filterBeta: 0; missTolerance: 30"
         device-orientation-permission-ui="enabled: true"
         vr-mode-ui="enabled: false"
         renderer="alpha: true; colorManagement: true"
@@ -40,8 +60,8 @@
         <!-- Preload assets -->
         <a-assets>
           <!-- Your cleaned models exported from Blender -->
-          <a-asset-item id="ufoModel"  src="./assets/ufo/UFO.glb"></a-asset-item>
-          <a-asset-item id="cubeModel" src="./assets/ufo/cube.glb"></a-asset-item>
+          <a-asset-item id="ufoModel"  src="/webxr-digital-business-card/assets/ufo/UFO.glb"></a-asset-item>
+          <a-asset-item id="cubeModel" src="/webxr-digital-business-card/assets/ufo/cube.glb"></a-asset-item>
         </a-assets>
 
         <!-- MindAR camera -->
@@ -50,8 +70,32 @@
         <!-- Marker root: layers + UFO will be added by main.js -->
         <a-entity mindar-image-target="targetIndex: 0" id="markerRoot"></a-entity>
       </a-scene>
-
-      <!-- App -->
+      
+      <script>
+        // Add error listeners to help debug
+        const scene = document.getElementById('ar-scene');
+        if (scene) {
+          scene.addEventListener('loaded', () => {
+            console.log('[AFRAME] Scene loaded successfully');
+          });
+          
+          scene.addEventListener('error', (e) => {
+            console.error('[AFRAME] Scene error:', e);
+          });
+          
+          // Check if MindAR component initialized
+          scene.addEventListener('loaded', () => {
+            setTimeout(() => {
+              const mindarComponent = scene.components['mindar-image'];
+              if (mindarComponent) {
+                console.log('[MINDAR] Component initialized:', mindarComponent);
+              } else {
+                console.error('[MINDAR] ❌ Component NOT initialized!');
+              }
+            }, 1000);
+          });
+        }
+      </script>
       <script type="module" src="/src/main.js"></script>
     </body>
   </html>

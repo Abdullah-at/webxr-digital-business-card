@@ -1,3 +1,6 @@
+// ---------- Styles ----------
+import '../style.css';
+
 // ---------- Asset imports (Vite) ----------
 import cardBaseURL from '/assets/Card_Base.png';
 import cardTextURL from '/assets/Card_Text.png';
