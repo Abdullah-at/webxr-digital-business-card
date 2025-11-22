@@ -219,16 +219,14 @@ window.addEventListener('DOMContentLoaded', () => {
       
       // Show interactive cube
       cube.setAttribute('visible', true);
-    }, 6000);
-    
-    // After 7 seconds, show HUD buttons (1 second after cube appears)
-    setTimeout(() => {
+      
+      // Show HUD buttons after 6 seconds (same time as cube appears)
       const hud = document.getElementById('hud');
       if (hud) {
         hud.classList.add('active');
         console.log('[HUD] Buttons shown after 6 seconds');
       }
-    }, 7000);
+    }, 6000);
   };
 
   const stopSequence = () => {
@@ -265,6 +263,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const hud = document.getElementById('hud');
     if (hud) {
       hud.classList.remove('active');
+      hud.classList.remove('expanded');
     }
     
     // Stop any cube rotation
@@ -416,11 +415,17 @@ END:VCARD`;
   
   // ---------- HUD Button Handlers ----------
   const btnAboutMe = document.getElementById('btn-1');
-  const btnJournal = document.getElementById('btn-2');
+  const btnProjects = document.getElementById('btn-2');
+  const hud = document.getElementById('hud');
   
   if (btnAboutMe) {
     btnAboutMe.addEventListener('click', () => {
       console.log('[HUD] About Me button clicked');
+      
+      // Collapse HUD sub-buttons if expanded
+      if (hud) {
+        hud.classList.remove('expanded');
+      }
       
       // Clear any existing About Me timers
       aboutMeTimers.forEach(timer => clearTimeout(timer));
@@ -453,10 +458,50 @@ END:VCARD`;
     });
   }
   
-  if (btnJournal) {
-    btnJournal.addEventListener('click', () => {
-      console.log('[HUD] Journal button clicked');
-      // TODO: Implement Journal functionality
+  if (btnProjects) {
+    btnProjects.addEventListener('click', () => {
+      console.log('[HUD] Projects button clicked');
+      
+      // Check if sub-buttons already exist
+      let subButtonsContainer = document.getElementById('sub-buttons-container');
+      
+      if (!subButtonsContainer) {
+        // Create sub-buttons container
+        subButtonsContainer = document.createElement('div');
+        subButtonsContainer.id = 'sub-buttons-container';
+        subButtonsContainer.className = 'sub-buttons';
+        
+        // Create 3 sub-buttons
+        const projects = [
+          { id: 'project-wan', label: 'WAN' },
+          { id: 'project-vendetta', label: 'Vendetta' },
+          { id: 'project-webxr', label: 'WebXR' }
+        ];
+        
+        projects.forEach(project => {
+          const btn = document.createElement('button');
+          btn.className = 'pill';
+          btn.id = project.id;
+          btn.textContent = project.label;
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            console.log(`[HUD] Project clicked: ${project.label}`);
+            // TODO: Implement project navigation
+          });
+          subButtonsContainer.appendChild(btn);
+        });
+        
+        // Append to HUD
+        if (hud) {
+          hud.appendChild(subButtonsContainer);
+        }
+      }
+      
+      // Toggle expanded state (don't change HUD size, just show/hide sub-buttons)
+      if (hud) {
+        hud.classList.toggle('expanded');
+        console.log('[HUD] Toggling sub-buttons visibility');
+      }
     });
   }
 });

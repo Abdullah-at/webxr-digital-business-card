@@ -22,9 +22,10 @@
       <!-- HUD - COMMENTED OUT (replaced by 3D cube) -->
       
       <div id="hud">
-        <div class="step"><button class="pill" id="btn-1">About Me</button></div>
-        <div class="step"><button class="pill" id="btn-2">Journal</button></div>
-    
+        <div class="main-buttons">
+          <button class="pill" id="btn-1">About Me</button>
+          <button class="pill" id="btn-2">Projects</button>
+        </div>
       </div>
       
 
@@ -52,7 +53,7 @@
       <a-scene
         id="ar-scene"
         mindar-image="imageTargetSrc: /webxr-digital-business-card/targets.mind; filterMinCF: 0.001; filterBeta: 0; missTolerance: 30"
-        device-orientation-permission-ui="enabled: true"
+        device-orientation-permission-ui="enabled: false"
         vr-mode-ui="enabled: false"
         renderer="alpha: true; colorManagement: true"
         embedded>
