@@ -48,8 +48,8 @@ a-image {
    HUD (glass panel UI)
 ---------------------------- */
 #hud {
-  display: flex;                 /* Always visible on GitHub Pages */
-  pointer-events: auto;         /* Always clickable */
+  display: none;                 /* Hidden by default - shown after 8 seconds */
+  pointer-events: none;         /* Not clickable until active */
   position: fixed;
   bottom: 16px;
   left: 50%;
@@ -70,7 +70,7 @@ a-image {
 }
 #hud.active { 
   display: flex; 
-  pointer-events: auto; 
+  pointer-events: auto;         /* Clickable when active */
   flex-direction: column; 
   gap: 8px; 
   align-items: center; 

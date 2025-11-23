@@ -113,11 +113,11 @@ window.addEventListener('DOMContentLoaded', () => {
   const markerRoot     = document.getElementById('markerRoot');
   if (!markerRoot) return;
   
-  // Make HUD visible immediately on GitHub Pages (buttons should always be clickable)
+  // HUD starts hidden - will be shown after 8 seconds in startSequence()
   const initialHud = document.getElementById('hud');
   if (initialHud) {
-    initialHud.classList.add('active');
-    console.log('[MAIN] HUD made visible immediately for GitHub Pages');
+    initialHud.classList.remove('active');
+    console.log('[MAIN] HUD starts hidden, will appear after 8 seconds');
   }
 
   // Tracker overlay toggle (hide when target found)
