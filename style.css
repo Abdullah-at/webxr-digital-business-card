@@ -150,13 +150,18 @@ a-image {
   justify-content: center;
   pointer-events: none;
   z-index: 5;
-  opacity: 0.3; /* 30% transparency */
+  opacity: 0.5; /* 50% transparency */
 }
 
 #tracker-overlay img {
-  max-width: 80vw;
-  max-height: 80vh;
+  width: auto;
+  height: auto;
+  max-width: 60vw;
+  max-height: 60vh;
+  min-width: 200px;
+  min-height: 200px;
   object-fit: contain;
+  object-position: center;
 }
 
 #tracker-overlay.hidden {

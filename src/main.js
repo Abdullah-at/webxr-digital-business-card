@@ -454,14 +454,16 @@ window.addEventListener('DOMContentLoaded', () => {
       
       // Show interactive cube
       cube.setAttribute('visible', true);
-      
-      // Show HUD buttons after 6 seconds (same time as cube appears)
+    }, 6000);
+    
+    // Show HUD buttons after 8 seconds (after target detection)
+    setTimeout(() => {
       const hud = document.getElementById('hud');
       if (hud) {
         hud.classList.add('active');
-        console.log('[HUD] Buttons shown after 6 seconds');
+        console.log('[HUD] Buttons shown after 8 seconds');
       }
-    }, 6000);
+    }, 8000);
   };
 
   const stopSequence = () => {
