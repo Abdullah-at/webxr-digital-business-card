@@ -7,14 +7,28 @@ const BASE_URL = import.meta.env.BASE_URL || '/webxr-digital-business-card/';
 
 // Helper to ensure asset URLs have the correct base path
 const ensureBasePath = (url) => {
+  if (!url) return url;
+  
   // If URL already has protocol (http/https) or already includes base path, return as-is
   if (url.startsWith('http') || url.includes('/webxr-digital-business-card/')) {
     return url;
   }
-  // Prepend base path (Vite might not add it for public folder assets in some cases)
-  const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+  
+  // Handle relative paths (starting with 'assets/' or just the filename)
+  if (url.startsWith('assets/')) {
+    const basePath = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
+    return `${basePath}/${url}`;
+  }
+  
+  // Handle absolute paths starting with /
+  if (url.startsWith('/')) {
+    const basePath = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
+    return `${basePath}${url}`;
+  }
+  
+  // Fallback: assume it needs base path
   const basePath = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
-  return `${basePath}${cleanUrl}`;
+  return `${basePath}/${url}`;
 };
 
 // Import assets (Vite will process these)
