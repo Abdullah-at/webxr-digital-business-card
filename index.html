@@ -52,10 +52,10 @@
       <!-- WebAR scene -->
       <a-scene
         id="ar-scene"
-        mindar-image="imageTargetSrc: /webxr-digital-business-card/targets.mind; filterMinCF: 0.001; filterBeta: 0; missTolerance: 30"
+        mindar-image="imageTargetSrc: /webxr-digital-business-card/targets.mind; filterMinCF: 0.001; filterBeta: 0; missTolerance: 30; autoStart: false"
         device-orientation-permission-ui="enabled: false"
         vr-mode-ui="enabled: false"
-        renderer="alpha: true; colorManagement: true"
+        renderer="alpha: true; colorManagement: true; antialias: true"
         embedded>
 
         <!-- Preload assets -->
@@ -78,14 +78,8 @@
         if (scene) {
           scene.addEventListener('loaded', () => {
             console.log('[AFRAME] Scene loaded successfully');
-          });
-          
-          scene.addEventListener('error', (e) => {
-            console.error('[AFRAME] Scene error:', e);
-          });
-          
-          // Check if MindAR component initialized
-          scene.addEventListener('loaded', () => {
+            
+            // Check if MindAR component initialized
             setTimeout(() => {
               const mindarComponent = scene.components['mindar-image'];
               if (mindarComponent) {
@@ -93,9 +87,81 @@
               } else {
                 console.error('[MINDAR] ❌ Component NOT initialized!');
               }
+              
+              // Check if system exists
+              const mindarSystem = scene.systems['mindar-image-system'];
+              if (mindarSystem) {
+                console.log('[MINDAR] System found:', mindarSystem);
+              } else {
+                console.warn('[MINDAR] System not found');
+              }
             }, 1000);
           });
+          
+          scene.addEventListener('error', (e) => {
+            console.error('[AFRAME] Scene error:', e);
+          });
         }
+        
+        // Start MindAR after user interaction (required for HTTPS/GitHub Pages)
+        let mindarStarted = false;
+        const startMindAR = () => {
+          if (mindarStarted) return;
+          mindarStarted = true;
+          
+          const scene = document.getElementById('ar-scene');
+          if (!scene) {
+            console.error('[MINDAR] Scene not found');
+            return;
+          }
+          
+          // Wait for scene to be ready
+          if (scene.hasLoaded) {
+            doStartMindAR();
+          } else {
+            scene.addEventListener('loaded', doStartMindAR, { once: true });
+          }
+        };
+        
+        const doStartMindAR = () => {
+          const scene = document.getElementById('ar-scene');
+          const mindarSystem = scene.systems['mindar-image-system'];
+          
+          if (mindarSystem) {
+            console.log('[MINDAR] Starting AR system on GitHub Pages...');
+            try {
+              mindarSystem.start();
+              console.log('[MINDAR] ✅ AR system started successfully');
+            } catch (err) {
+              console.error('[MINDAR] ❌ Error starting AR system:', err);
+            }
+          } else {
+            console.error('[MINDAR] ❌ System not found');
+            // Try alternative: use component start method
+            const mindarComponent = scene.components['mindar-image'];
+            if (mindarComponent && typeof mindarComponent.start === 'function') {
+              try {
+                mindarComponent.start();
+                console.log('[MINDAR] ✅ Started via component method');
+              } catch (err) {
+                console.error('[MINDAR] ❌ Error starting via component:', err);
+              }
+            }
+          }
+        };
+        
+        // Start on any user interaction (click, touch, etc.)
+        ['click', 'touchstart'].forEach(eventType => {
+          document.addEventListener(eventType, startMindAR, { once: true, passive: true });
+        });
+        
+        // Also try to start after a short delay (fallback)
+        setTimeout(() => {
+          if (!mindarStarted) {
+            console.log('[MINDAR] Attempting auto-start after delay...');
+            startMindAR();
+          }
+        }, 2000);
       </script>
       <script type="module" src="./src/main.js"></script>
     </body>
