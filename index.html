@@ -31,38 +31,40 @@
 
       <!-- App -->
       <script>
-        // Detect base path - works for both localhost (Vite dev) and GitHub Pages
-        const hostname = window.location.hostname;
-        const pathname = window.location.pathname;
-        const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('192.168') || hostname.includes('.local');
-        // Vite uses base path even in dev, so always use it
-        const BASE_PATH = '/webxr-digital-business-card';
-        window.AR_BASE_PATH = BASE_PATH;
-        
-        console.log('[INIT] Base path:', BASE_PATH, 'hostname:', hostname, 'pathname:', pathname);
-        
-        // Set tracker image immediately
-        const trackerImg = document.getElementById('tracker-img');
-        if (trackerImg) {
-          trackerImg.src = `${BASE_PATH}/assets/tracker.png`;
-          console.log('[INIT] Tracker image:', trackerImg.src);
-        }
+       // Detect base path from current URL (works locally + GitHub Pages)
+const path = window.location.pathname;
+// Remove "index.html" if present and trailing slash
+let BASE_PATH = path.replace(/\/index\.html$/, '');
+if (BASE_PATH.endsWith('/')) BASE_PATH = BASE_PATH.slice(0, -1);
+
+// Expose for other scripts (main.js, cubeFaces.js)
+window.AR_BASE_PATH = BASE_PATH;
+
+console.log('[INIT] Base path:', BASE_PATH, 'pathname:', path);
+
+// Set tracker image immediately (relative to base)
+const trackerImg = document.getElementById('tracker-img');
+if (trackerImg) {
+  trackerImg.src = `${BASE_PATH}/assets/tracker.png`;
+  console.log('[INIT] Tracker image:', trackerImg.src);
+}
+
       </script>
 
       <!-- WebAR scene -->
       <a-scene
         id="ar-scene"
-        mindar-image="imageTargetSrc: /webxr-digital-business-card/targets.mind; filterMinCF: 0.001; filterBeta: 0; missTolerance: 30"
+        mindar-image="imageTargetSrc: ./targets.mind; filterMinCF: 0.001; filterBeta: 0; missTolerance: 30; autoStart: false"
         device-orientation-permission-ui="enabled: false"
         vr-mode-ui="enabled: false"
-        renderer="alpha: true; colorManagement: true"
+        renderer="alpha: true; colorManagement: true; antialias: true"
         embedded>
 
         <!-- Preload assets -->
         <a-assets>
           <!-- Your cleaned models exported from Blender -->
-          <a-asset-item id="ufoModel"  src="/webxr-digital-business-card/assets/ufo/UFO.glb"></a-asset-item>
-          <a-asset-item id="cubeModel" src="/webxr-digital-business-card/assets/ufo/cube.glb"></a-asset-item>
+          <a-asset-item id="ufoModel"  src="./assets/ufo/UFO.glb"></a-asset-item>
+          <a-asset-item id="cubeModel" src="./assets/ufo/cube.glb"></a-asset-item>
         </a-assets>
 
         <!-- MindAR camera -->
@@ -78,14 +80,8 @@
         if (scene) {
           scene.addEventListener('loaded', () => {
             console.log('[AFRAME] Scene loaded successfully');
-          });
-          
-          scene.addEventListener('error', (e) => {
-            console.error('[AFRAME] Scene error:', e);
-          });
-          
-          // Check if MindAR component initialized
-          scene.addEventListener('loaded', () => {
+            
+            // Check if MindAR component initialized
             setTimeout(() => {
               const mindarComponent = scene.components['mindar-image'];
               if (mindarComponent) {
@@ -93,9 +89,143 @@
               } else {
                 console.error('[MINDAR] ❌ Component NOT initialized!');
               }
+              
+              // Check if system exists
+              const mindarSystem = scene.systems['mindar-image-system'];
+              if (mindarSystem) {
+                console.log('[MINDAR] System found:', mindarSystem);
+              } else {
+                console.warn('[MINDAR] System not found');
+              }
             }, 1000);
           });
+          
+          scene.addEventListener('error', (e) => {
+            console.error('[AFRAME] Scene error:', e);
+          });
         }
+        
+        // Start MindAR after user interaction (required for HTTPS/GitHub Pages)
+        let mindarStarted = false;
+        const startMindAR = () => {
+          if (mindarStarted) return;
+          mindarStarted = true;
+          
+          const scene = document.getElementById('ar-scene');
+          if (!scene) {
+            console.error('[MINDAR] Scene not found');
+            return;
+          }
+          
+          // Wait for scene to be ready
+          if (scene.hasLoaded) {
+            doStartMindAR();
+          } else {
+            scene.addEventListener('loaded', doStartMindAR, { once: true });
+          }
+        };
+        
+        const doStartMindAR = () => {
+          const scene = document.getElementById('ar-scene');
+          if (!scene) {
+            console.error('[MINDAR] Scene not found in doStartMindAR');
+            return;
+          }
+          
+          // Wait a bit more for systems to be fully initialized
+          setTimeout(() => {
+            const mindarSystem = scene.systems['mindar-image-system'];
+            
+            if (mindarSystem) {
+              console.log('[MINDAR] Starting AR system on GitHub Pages...');
+              try {
+                if (typeof mindarSystem.start === 'function') {
+                  mindarSystem.start();
+                  console.log('[MINDAR] ✅ AR system started successfully via system.start()');
+                } else {
+                  console.warn('[MINDAR] System.start() not available, trying alternative...');
+                  // Try to trigger start via component
+                  const mindarComponent = scene.components['mindar-image'];
+                  if (mindarComponent) {
+                    if (typeof mindarComponent.start === 'function') {
+                      mindarComponent.start();
+                      console.log('[MINDAR] ✅ Started via component.start()');
+                    } else {
+                      // Last resort: set autoStart to true and reload component
+                      scene.setAttribute('mindar-image', 'autoStart', true);
+                      console.log('[MINDAR] ✅ Set autoStart to true');
+                    }
+                  }
+                }
+              } catch (err) {
+                console.error('[MINDAR] ❌ Error starting AR system:', err);
+                // Try component method as fallback
+                try {
+                  const mindarComponent = scene.components['mindar-image'];
+                  if (mindarComponent && typeof mindarComponent.start === 'function') {
+                    mindarComponent.start();
+                    console.log('[MINDAR] ✅ Started via component method (fallback)');
+                  }
+                } catch (err2) {
+                  console.error('[MINDAR] ❌ All start methods failed:', err2);
+                }
+              }
+            } else {
+              console.error('[MINDAR] ❌ System not found, trying component directly...');
+              // Try component method directly
+              const mindarComponent = scene.components['mindar-image'];
+              if (mindarComponent) {
+                if (typeof mindarComponent.start === 'function') {
+                  try {
+                    mindarComponent.start();
+                    console.log('[MINDAR] ✅ Started via component method');
+                  } catch (err) {
+                    console.error('[MINDAR] ❌ Error starting via component:', err);
+                    // Last resort: enable autoStart
+                    scene.setAttribute('mindar-image', 'autoStart', true);
+                  }
+                } else {
+                  // Enable autoStart as last resort
+                  scene.setAttribute('mindar-image', 'autoStart', true);
+                  console.log('[MINDAR] ✅ Enabled autoStart as fallback');
+                }
+              } else {
+                console.error('[MINDAR] ❌ Component also not found!');
+              }
+            }
+          }, 100);
+        };
+        
+        // Start on any user interaction (click, touch, etc.)
+        // Also start when HUD buttons are clicked
+        const startOnInteraction = (e) => {
+          console.log('[MINDAR] User interaction detected, starting AR...');
+          startMindAR();
+        };
+        
+        ['click', 'touchstart'].forEach(eventType => {
+          document.addEventListener(eventType, startOnInteraction, { once: true, passive: true });
+        });
+        
+        // Make HUD buttons also trigger MindAR start
+        const hudButtons = document.querySelectorAll('#hud button, .pill');
+        hudButtons.forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            console.log('[MINDAR] Button clicked, ensuring AR is started...');
+            if (!mindarStarted) {
+              startMindAR();
+            }
+            // Let the button's normal click handler work too
+          });
+        });
+        
+        // Also try to start after a short delay (fallback)
+        setTimeout(() => {
+          if (!mindarStarted) {
+            console.log('[MINDAR] Attempting auto-start after delay...');
+            startMindAR();
+          }
+        }, 2000);
       </script>
       <script type="module" src="./src/main.js"></script>
     </body>

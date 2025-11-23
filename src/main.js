@@ -2,22 +2,99 @@
 import '../style.css';
 
 // ---------- Asset imports (Vite) ----------
-import cardBaseURL from '/assets/Card_Base.png';
-import cardTextURL from '/assets/Card_Text.png';
-import tri1URL     from '/assets/Triangles1.png';
-import tri2URL     from '/assets/Triangles2.png';
-import tri3URL     from '/assets/Triangles3.png';
-import tri4URL     from '/assets/Triangles4.png';
-import artURL      from '/assets/Art.png';
-import aboutMeURL  from '/assets/AboutMe.png';
-import wanS0URL    from '/assets/WAN_S0.png';
-import wanS1URL    from '/assets/WAN_S1.png';
-import wanS2URL    from '/assets/WAN_S2.png';
-import wanS3URL    from '/assets/WAN_S3.png';
-import wanS4URL    from '/assets/WAN_S4.png';
-import vendettaURL from '/assets/Vendetta.png';
-import vendettaCubeURL from '/assets/Vendetta_Cube.png';
-import vendettaVideoURL from '/assets/Vendetta.mp4';
+// Use Vite's import.meta.env.BASE_URL for proper base path handling
+const BASE_URL = import.meta.env.BASE_URL || '/';
+
+// Runtime function to ensure asset URLs have the correct base path
+// This must be called at runtime, not module load time, to ensure window.AR_BASE_PATH is available
+const getAssetURL = (url) => {
+  if (!url) return url;
+  
+  // Get base path at runtime (from window or import.meta.env)
+  const runtimeBase = (typeof window !== 'undefined' && window.AR_BASE_PATH) 
+    ? window.AR_BASE_PATH 
+    : (BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL);
+  
+  // If URL already has protocol (http/https) or already includes base path, return as-is
+  if (url.startsWith('http') || url.includes('/webxr-digital-business-card/')) {
+    return url;
+  }
+  
+  // Handle relative paths (starting with 'assets/' or just the filename)
+  if (url.startsWith('assets/')) {
+    const result = `${runtimeBase}/${url}`;
+    if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+      console.log(`[ASSET] ${url} -> ${result}`);
+    }
+    return result;
+  }
+  
+  // Handle absolute paths starting with / (but without base path)
+  if (url.startsWith('/')) {
+    // If it starts with /assets, it needs the base path
+    if (url.startsWith('/assets/')) {
+      const result = `${runtimeBase}${url}`;
+      if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+        console.log(`[ASSET] ${url} -> ${result}`);
+      }
+      return result;
+    }
+    // If it already has the base path, return as-is
+    if (url.startsWith('/webxr-digital-business-card/')) {
+      return url;
+    }
+    // Otherwise, prepend base path
+    const result = `${runtimeBase}${url}`;
+    if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+      console.log(`[ASSET] ${url} -> ${result}`);
+    }
+    return result;
+  }
+  
+  // Fallback: assume it needs base path
+  const result = `${runtimeBase}/${url}`;
+  if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+    console.log(`[ASSET] ${url} -> ${result}`);
+  }
+  return result;
+};
+
+// Import assets (Vite will process these)
+import cardBaseURLRaw from '/assets/Card_Base.png';
+import cardTextURLRaw from '/assets/Card_Text.png';
+import tri1URLRaw     from '/assets/Triangles1.png';
+import tri2URLRaw     from '/assets/Triangles2.png';
+import tri3URLRaw     from '/assets/Triangles3.png';
+import tri4URLRaw     from '/assets/Triangles4.png';
+import artURLRaw      from '/assets/Art.png';
+import aboutMeURLRaw  from '/assets/AboutMe.png';
+import wanS0URLRaw    from '/assets/WAN_S0.png';
+import wanS1URLRaw    from '/assets/WAN_S1.png';
+import wanS2URLRaw    from '/assets/WAN_S2.png';
+import wanS3URLRaw    from '/assets/WAN_S3.png';
+import wanS4URLRaw    from '/assets/WAN_S4.png';
+import vendettaURLRaw from '/assets/Vendetta.png';
+import vendettaCubeURLRaw from '/assets/Vendetta_Cube.png';
+import vendettaVideoURLRaw from '/assets/Vendetta.mp4';
+
+// Store raw URLs - will be processed at runtime with getAssetURL()
+// This ensures window.AR_BASE_PATH is available when URLs are used
+const cardBaseURLRaw_final = cardBaseURLRaw;
+const cardTextURLRaw_final = cardTextURLRaw;
+const tri1URLRaw_final = tri1URLRaw;
+const tri2URLRaw_final = tri2URLRaw;
+const tri3URLRaw_final = tri3URLRaw;
+const tri4URLRaw_final = tri4URLRaw;
+const artURLRaw_final = artURLRaw;
+const aboutMeURLRaw_final = aboutMeURLRaw;
+const wanS0URLRaw_final = wanS0URLRaw;
+const wanS1URLRaw_final = wanS1URLRaw;
+const wanS2URLRaw_final = wanS2URLRaw;
+const wanS3URLRaw_final = wanS3URLRaw;
+const wanS4URLRaw_final = wanS4URLRaw;
+const vendettaURLRaw_final = vendettaURLRaw;
+const vendettaCubeURLRaw_final = vendettaCubeURLRaw;
+const vendettaVideoURLRaw_final = vendettaVideoURLRaw;
 
 // Import Cube Controller and Faces
 import { CubeController } from './cubeController.js';
@@ -35,6 +112,13 @@ window.addEventListener('DOMContentLoaded', () => {
   const trackerOverlay = document.getElementById('tracker-overlay');
   const markerRoot     = document.getElementById('markerRoot');
   if (!markerRoot) return;
+  
+  // Make HUD visible immediately on GitHub Pages (buttons should always be clickable)
+  const initialHud = document.getElementById('hud');
+  if (initialHud) {
+    initialHud.classList.add('active');
+    console.log('[MAIN] HUD made visible immediately for GitHub Pages');
+  }
 
   // Tracker overlay toggle (hide when target found)
   markerRoot.addEventListener('targetFound', () => {
@@ -75,12 +159,12 @@ window.addEventListener('DOMContentLoaded', () => {
   const artLayer = makeLayer('artLayer', 0.007);
   artLayer.setAttribute('visible', false);
   artLayer.setAttribute('material', 'opacity:0');
-  artLayer.setAttribute('src', artURL);
+  artLayer.setAttribute('src', getAssetURL(artURLRaw_final));
   
   const aboutMeLayer = makeLayer('aboutMeLayer', 0.008);
   aboutMeLayer.setAttribute('visible', false);
   aboutMeLayer.setAttribute('material', 'opacity:0');
-  aboutMeLayer.setAttribute('src', aboutMeURL);
+  aboutMeLayer.setAttribute('src', getAssetURL(aboutMeURLRaw_final));
   
   // WAN Slide layers (5 slides: S0, S1, S2, S3, S4)
   const wanSlides = [
@@ -91,11 +175,11 @@ window.addEventListener('DOMContentLoaded', () => {
     makeLayer('wanSlide4', 0.009)
   ];
   
-  wanSlides[0].setAttribute('src', wanS0URL);
-  wanSlides[1].setAttribute('src', wanS1URL);
-  wanSlides[2].setAttribute('src', wanS2URL);
-  wanSlides[3].setAttribute('src', wanS3URL);
-  wanSlides[4].setAttribute('src', wanS4URL);
+  wanSlides[0].setAttribute('src', getAssetURL(wanS0URLRaw_final));
+  wanSlides[1].setAttribute('src', getAssetURL(wanS1URLRaw_final));
+  wanSlides[2].setAttribute('src', getAssetURL(wanS2URLRaw_final));
+  wanSlides[3].setAttribute('src', getAssetURL(wanS3URLRaw_final));
+  wanSlides[4].setAttribute('src', getAssetURL(wanS4URLRaw_final));
   
   wanSlides.forEach((slide, index) => {
     slide.setAttribute('visible', false);
@@ -108,14 +192,14 @@ window.addEventListener('DOMContentLoaded', () => {
   const vendettaLayer = makeLayer('vendettaLayer', 0.009);
   vendettaLayer.setAttribute('visible', false);
   vendettaLayer.setAttribute('material', 'opacity:0');
-  vendettaLayer.setAttribute('src', vendettaURL);
+  vendettaLayer.setAttribute('src', getAssetURL(vendettaURLRaw_final));
   vendettaLayer.setAttribute('animation__fadein', 'property: material.opacity; from: 0; to: 1; dur: 800; easing: easeInOutQuad; startEvents: show-vendetta');
   vendettaLayer.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-vendetta');
   
   // Vendetta video element (positioned at bottom center of Vendetta.png, in front)
   const vendettaVideo = document.createElement('a-video');
   vendettaVideo.setAttribute('id', 'vendettaVideo');
-  vendettaVideo.setAttribute('src', vendettaVideoURL);
+  vendettaVideo.setAttribute('src', getAssetURL(vendettaVideoURLRaw_final));
   vendettaVideo.setAttribute('width', '1.2');
   vendettaVideo.setAttribute('height', '0.66'); // 16:9 aspect ratio
   // Position: bottom center, z=0.010 (in front of Vendetta layer at 0.009), y adjusted to align bottom with Vendetta.png
@@ -182,13 +266,13 @@ window.addEventListener('DOMContentLoaded', () => {
   aboutMeLayer.setAttribute('animation__fadein', 'property: material.opacity; from: 0; to: 1; dur: 800; easing: easeInOutQuad; startEvents: show-aboutme');
   aboutMeLayer.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-aboutme');
 
-  // Apply textures
-  base.setAttribute('src', cardBaseURL);
-  text.setAttribute('src', cardTextURL);
-  t1.setAttribute('src',   tri1URL);
-  t2.setAttribute('src',   tri2URL);
-  t3.setAttribute('src',   tri3URL);
-  t4.setAttribute('src',   tri4URL);
+  // Apply textures (use getAssetURL at runtime to ensure correct base path)
+  base.setAttribute('src', getAssetURL(cardBaseURLRaw_final));
+  text.setAttribute('src', getAssetURL(cardTextURLRaw_final));
+  t1.setAttribute('src',   getAssetURL(tri1URLRaw_final));
+  t2.setAttribute('src',   getAssetURL(tri2URLRaw_final));
+  t3.setAttribute('src',   getAssetURL(tri3URLRaw_final));
+  t4.setAttribute('src',   getAssetURL(tri4URLRaw_final));
   
   // Add fade out animation for base layer
   base.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-text');
