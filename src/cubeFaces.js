@@ -40,7 +40,8 @@ export class CubeFaces {
     
     setTimeout(() => {
       // Get base path (always set to /webxr-digital-business-card)
-      const basePath = window.AR_BASE_PATH || '/webxr-digital-business-card';
+// Get base path from global (set in index.html)
+const basePath = window.AR_BASE_PATH || '';
       
       // Build paths with base path
       const vendettaCubeSrc = `${basePath}/assets/Vendetta_Cube.png`;

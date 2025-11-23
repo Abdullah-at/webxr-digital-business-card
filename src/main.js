@@ -3,7 +3,7 @@ import '../style.css';
 
 // ---------- Asset imports (Vite) ----------
 // Use Vite's import.meta.env.BASE_URL for proper base path handling
-const BASE_URL = import.meta.env.BASE_URL || '/webxr-digital-business-card/';
+const BASE_URL = import.meta.env.BASE_URL || '/';
 
 // Runtime function to ensure asset URLs have the correct base path
 // This must be called at runtime, not module load time, to ensure window.AR_BASE_PATH is available

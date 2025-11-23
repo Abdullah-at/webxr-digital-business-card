@@ -31,28 +31,30 @@
 
       <!-- App -->
       <script>
-        // Detect base path - works for both localhost (Vite dev) and GitHub Pages
-        const hostname = window.location.hostname;
-        const pathname = window.location.pathname;
-        const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('192.168') || hostname.includes('.local');
-        // Vite uses base path even in dev, so always use it
-        const BASE_PATH = '/webxr-digital-business-card';
-        window.AR_BASE_PATH = BASE_PATH;
-        
-        console.log('[INIT] Base path:', BASE_PATH, 'hostname:', hostname, 'pathname:', pathname);
-        
-        // Set tracker image immediately
-        const trackerImg = document.getElementById('tracker-img');
-        if (trackerImg) {
-          trackerImg.src = `${BASE_PATH}/assets/tracker.png`;
-          console.log('[INIT] Tracker image:', trackerImg.src);
-        }
+       // Detect base path from current URL (works locally + GitHub Pages)
+const path = window.location.pathname;
+// Remove "index.html" if present and trailing slash
+let BASE_PATH = path.replace(/\/index\.html$/, '');
+if (BASE_PATH.endsWith('/')) BASE_PATH = BASE_PATH.slice(0, -1);
+
+// Expose for other scripts (main.js, cubeFaces.js)
+window.AR_BASE_PATH = BASE_PATH;
+
+console.log('[INIT] Base path:', BASE_PATH, 'pathname:', path);
+
+// Set tracker image immediately (relative to base)
+const trackerImg = document.getElementById('tracker-img');
+if (trackerImg) {
+  trackerImg.src = `${BASE_PATH}/assets/tracker.png`;
+  console.log('[INIT] Tracker image:', trackerImg.src);
+}
+
       </script>
 
       <!-- WebAR scene -->
       <a-scene
         id="ar-scene"
-        mindar-image="imageTargetSrc: /webxr-digital-business-card/targets.mind; filterMinCF: 0.001; filterBeta: 0; missTolerance: 30; autoStart: false"
+        mindar-image="imageTargetSrc: ./targets.mind; filterMinCF: 0.001; filterBeta: 0; missTolerance: 30; autoStart: false"
         device-orientation-permission-ui="enabled: false"
         vr-mode-ui="enabled: false"
         renderer="alpha: true; colorManagement: true; antialias: true"
@@ -61,8 +63,8 @@
         <!-- Preload assets -->
         <a-assets>
           <!-- Your cleaned models exported from Blender -->
-          <a-asset-item id="ufoModel"  src="/webxr-digital-business-card/assets/ufo/UFO.glb"></a-asset-item>
-          <a-asset-item id="cubeModel" src="/webxr-digital-business-card/assets/ufo/cube.glb"></a-asset-item>
+          <a-asset-item id="ufoModel"  src="./assets/ufo/UFO.glb"></a-asset-item>
+          <a-asset-item id="cubeModel" src="./assets/ufo/cube.glb"></a-asset-item>
         </a-assets>
 
         <!-- MindAR camera -->
