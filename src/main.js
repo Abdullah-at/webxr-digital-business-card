@@ -2,22 +2,56 @@
 import '../style.css';
 
 // ---------- Asset imports (Vite) ----------
-import cardBaseURL from '/assets/Card_Base.png';
-import cardTextURL from '/assets/Card_Text.png';
-import tri1URL     from '/assets/Triangles1.png';
-import tri2URL     from '/assets/Triangles2.png';
-import tri3URL     from '/assets/Triangles3.png';
-import tri4URL     from '/assets/Triangles4.png';
-import artURL      from '/assets/Art.png';
-import aboutMeURL  from '/assets/AboutMe.png';
-import wanS0URL    from '/assets/WAN_S0.png';
-import wanS1URL    from '/assets/WAN_S1.png';
-import wanS2URL    from '/assets/WAN_S2.png';
-import wanS3URL    from '/assets/WAN_S3.png';
-import wanS4URL    from '/assets/WAN_S4.png';
-import vendettaURL from '/assets/Vendetta.png';
-import vendettaCubeURL from '/assets/Vendetta_Cube.png';
-import vendettaVideoURL from '/assets/Vendetta.mp4';
+// Use Vite's import.meta.env.BASE_URL for proper base path handling
+const BASE_URL = import.meta.env.BASE_URL || '/webxr-digital-business-card/';
+
+// Helper to ensure asset URLs have the correct base path
+const ensureBasePath = (url) => {
+  // If URL already has protocol (http/https) or already includes base path, return as-is
+  if (url.startsWith('http') || url.includes('/webxr-digital-business-card/')) {
+    return url;
+  }
+  // Prepend base path (Vite might not add it for public folder assets in some cases)
+  const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+  const basePath = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
+  return `${basePath}${cleanUrl}`;
+};
+
+// Import assets (Vite will process these)
+import cardBaseURLRaw from '/assets/Card_Base.png';
+import cardTextURLRaw from '/assets/Card_Text.png';
+import tri1URLRaw     from '/assets/Triangles1.png';
+import tri2URLRaw     from '/assets/Triangles2.png';
+import tri3URLRaw     from '/assets/Triangles3.png';
+import tri4URLRaw     from '/assets/Triangles4.png';
+import artURLRaw      from '/assets/Art.png';
+import aboutMeURLRaw  from '/assets/AboutMe.png';
+import wanS0URLRaw    from '/assets/WAN_S0.png';
+import wanS1URLRaw    from '/assets/WAN_S1.png';
+import wanS2URLRaw    from '/assets/WAN_S2.png';
+import wanS3URLRaw    from '/assets/WAN_S3.png';
+import wanS4URLRaw    from '/assets/WAN_S4.png';
+import vendettaURLRaw from '/assets/Vendetta.png';
+import vendettaCubeURLRaw from '/assets/Vendetta_Cube.png';
+import vendettaVideoURLRaw from '/assets/Vendetta.mp4';
+
+// Ensure all URLs have correct base path for GitHub Pages
+const cardBaseURL = ensureBasePath(cardBaseURLRaw);
+const cardTextURL = ensureBasePath(cardTextURLRaw);
+const tri1URL = ensureBasePath(tri1URLRaw);
+const tri2URL = ensureBasePath(tri2URLRaw);
+const tri3URL = ensureBasePath(tri3URLRaw);
+const tri4URL = ensureBasePath(tri4URLRaw);
+const artURL = ensureBasePath(artURLRaw);
+const aboutMeURL = ensureBasePath(aboutMeURLRaw);
+const wanS0URL = ensureBasePath(wanS0URLRaw);
+const wanS1URL = ensureBasePath(wanS1URLRaw);
+const wanS2URL = ensureBasePath(wanS2URLRaw);
+const wanS3URL = ensureBasePath(wanS3URLRaw);
+const wanS4URL = ensureBasePath(wanS4URLRaw);
+const vendettaURL = ensureBasePath(vendettaURLRaw);
+const vendettaCubeURL = ensureBasePath(vendettaCubeURLRaw);
+const vendettaVideoURL = ensureBasePath(vendettaVideoURLRaw);
 
 // Import Cube Controller and Faces
 import { CubeController } from './cubeController.js';
