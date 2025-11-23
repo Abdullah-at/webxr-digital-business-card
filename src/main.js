@@ -5,9 +5,15 @@ import '../style.css';
 // Use Vite's import.meta.env.BASE_URL for proper base path handling
 const BASE_URL = import.meta.env.BASE_URL || '/webxr-digital-business-card/';
 
-// Helper to ensure asset URLs have the correct base path
-const ensureBasePath = (url) => {
+// Runtime function to ensure asset URLs have the correct base path
+// This must be called at runtime, not module load time, to ensure window.AR_BASE_PATH is available
+const getAssetURL = (url) => {
   if (!url) return url;
+  
+  // Get base path at runtime (from window or import.meta.env)
+  const runtimeBase = (typeof window !== 'undefined' && window.AR_BASE_PATH) 
+    ? window.AR_BASE_PATH 
+    : (BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL);
   
   // If URL already has protocol (http/https) or already includes base path, return as-is
   if (url.startsWith('http') || url.includes('/webxr-digital-business-card/')) {
@@ -16,19 +22,41 @@ const ensureBasePath = (url) => {
   
   // Handle relative paths (starting with 'assets/' or just the filename)
   if (url.startsWith('assets/')) {
-    const basePath = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
-    return `${basePath}/${url}`;
+    const result = `${runtimeBase}/${url}`;
+    if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+      console.log(`[ASSET] ${url} -> ${result}`);
+    }
+    return result;
   }
   
-  // Handle absolute paths starting with /
+  // Handle absolute paths starting with / (but without base path)
   if (url.startsWith('/')) {
-    const basePath = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
-    return `${basePath}${url}`;
+    // If it starts with /assets, it needs the base path
+    if (url.startsWith('/assets/')) {
+      const result = `${runtimeBase}${url}`;
+      if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+        console.log(`[ASSET] ${url} -> ${result}`);
+      }
+      return result;
+    }
+    // If it already has the base path, return as-is
+    if (url.startsWith('/webxr-digital-business-card/')) {
+      return url;
+    }
+    // Otherwise, prepend base path
+    const result = `${runtimeBase}${url}`;
+    if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+      console.log(`[ASSET] ${url} -> ${result}`);
+    }
+    return result;
   }
   
   // Fallback: assume it needs base path
-  const basePath = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
-  return `${basePath}/${url}`;
+  const result = `${runtimeBase}/${url}`;
+  if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+    console.log(`[ASSET] ${url} -> ${result}`);
+  }
+  return result;
 };
 
 // Import assets (Vite will process these)
@@ -49,23 +77,24 @@ import vendettaURLRaw from '/assets/Vendetta.png';
 import vendettaCubeURLRaw from '/assets/Vendetta_Cube.png';
 import vendettaVideoURLRaw from '/assets/Vendetta.mp4';
 
-// Ensure all URLs have correct base path for GitHub Pages
-const cardBaseURL = ensureBasePath(cardBaseURLRaw);
-const cardTextURL = ensureBasePath(cardTextURLRaw);
-const tri1URL = ensureBasePath(tri1URLRaw);
-const tri2URL = ensureBasePath(tri2URLRaw);
-const tri3URL = ensureBasePath(tri3URLRaw);
-const tri4URL = ensureBasePath(tri4URLRaw);
-const artURL = ensureBasePath(artURLRaw);
-const aboutMeURL = ensureBasePath(aboutMeURLRaw);
-const wanS0URL = ensureBasePath(wanS0URLRaw);
-const wanS1URL = ensureBasePath(wanS1URLRaw);
-const wanS2URL = ensureBasePath(wanS2URLRaw);
-const wanS3URL = ensureBasePath(wanS3URLRaw);
-const wanS4URL = ensureBasePath(wanS4URLRaw);
-const vendettaURL = ensureBasePath(vendettaURLRaw);
-const vendettaCubeURL = ensureBasePath(vendettaCubeURLRaw);
-const vendettaVideoURL = ensureBasePath(vendettaVideoURLRaw);
+// Store raw URLs - will be processed at runtime with getAssetURL()
+// This ensures window.AR_BASE_PATH is available when URLs are used
+const cardBaseURLRaw_final = cardBaseURLRaw;
+const cardTextURLRaw_final = cardTextURLRaw;
+const tri1URLRaw_final = tri1URLRaw;
+const tri2URLRaw_final = tri2URLRaw;
+const tri3URLRaw_final = tri3URLRaw;
+const tri4URLRaw_final = tri4URLRaw;
+const artURLRaw_final = artURLRaw;
+const aboutMeURLRaw_final = aboutMeURLRaw;
+const wanS0URLRaw_final = wanS0URLRaw;
+const wanS1URLRaw_final = wanS1URLRaw;
+const wanS2URLRaw_final = wanS2URLRaw;
+const wanS3URLRaw_final = wanS3URLRaw;
+const wanS4URLRaw_final = wanS4URLRaw;
+const vendettaURLRaw_final = vendettaURLRaw;
+const vendettaCubeURLRaw_final = vendettaCubeURLRaw;
+const vendettaVideoURLRaw_final = vendettaVideoURLRaw;
 
 // Import Cube Controller and Faces
 import { CubeController } from './cubeController.js';
@@ -130,12 +159,12 @@ window.addEventListener('DOMContentLoaded', () => {
   const artLayer = makeLayer('artLayer', 0.007);
   artLayer.setAttribute('visible', false);
   artLayer.setAttribute('material', 'opacity:0');
-  artLayer.setAttribute('src', artURL);
+  artLayer.setAttribute('src', getAssetURL(artURLRaw_final));
   
   const aboutMeLayer = makeLayer('aboutMeLayer', 0.008);
   aboutMeLayer.setAttribute('visible', false);
   aboutMeLayer.setAttribute('material', 'opacity:0');
-  aboutMeLayer.setAttribute('src', aboutMeURL);
+  aboutMeLayer.setAttribute('src', getAssetURL(aboutMeURLRaw_final));
   
   // WAN Slide layers (5 slides: S0, S1, S2, S3, S4)
   const wanSlides = [
@@ -146,11 +175,11 @@ window.addEventListener('DOMContentLoaded', () => {
     makeLayer('wanSlide4', 0.009)
   ];
   
-  wanSlides[0].setAttribute('src', wanS0URL);
-  wanSlides[1].setAttribute('src', wanS1URL);
-  wanSlides[2].setAttribute('src', wanS2URL);
-  wanSlides[3].setAttribute('src', wanS3URL);
-  wanSlides[4].setAttribute('src', wanS4URL);
+  wanSlides[0].setAttribute('src', getAssetURL(wanS0URLRaw_final));
+  wanSlides[1].setAttribute('src', getAssetURL(wanS1URLRaw_final));
+  wanSlides[2].setAttribute('src', getAssetURL(wanS2URLRaw_final));
+  wanSlides[3].setAttribute('src', getAssetURL(wanS3URLRaw_final));
+  wanSlides[4].setAttribute('src', getAssetURL(wanS4URLRaw_final));
   
   wanSlides.forEach((slide, index) => {
     slide.setAttribute('visible', false);
@@ -163,14 +192,14 @@ window.addEventListener('DOMContentLoaded', () => {
   const vendettaLayer = makeLayer('vendettaLayer', 0.009);
   vendettaLayer.setAttribute('visible', false);
   vendettaLayer.setAttribute('material', 'opacity:0');
-  vendettaLayer.setAttribute('src', vendettaURL);
+  vendettaLayer.setAttribute('src', getAssetURL(vendettaURLRaw_final));
   vendettaLayer.setAttribute('animation__fadein', 'property: material.opacity; from: 0; to: 1; dur: 800; easing: easeInOutQuad; startEvents: show-vendetta');
   vendettaLayer.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-vendetta');
   
   // Vendetta video element (positioned at bottom center of Vendetta.png, in front)
   const vendettaVideo = document.createElement('a-video');
   vendettaVideo.setAttribute('id', 'vendettaVideo');
-  vendettaVideo.setAttribute('src', vendettaVideoURL);
+  vendettaVideo.setAttribute('src', getAssetURL(vendettaVideoURLRaw_final));
   vendettaVideo.setAttribute('width', '1.2');
   vendettaVideo.setAttribute('height', '0.66'); // 16:9 aspect ratio
   // Position: bottom center, z=0.010 (in front of Vendetta layer at 0.009), y adjusted to align bottom with Vendetta.png
@@ -237,13 +266,13 @@ window.addEventListener('DOMContentLoaded', () => {
   aboutMeLayer.setAttribute('animation__fadein', 'property: material.opacity; from: 0; to: 1; dur: 800; easing: easeInOutQuad; startEvents: show-aboutme');
   aboutMeLayer.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-aboutme');
 
-  // Apply textures
-  base.setAttribute('src', cardBaseURL);
-  text.setAttribute('src', cardTextURL);
-  t1.setAttribute('src',   tri1URL);
-  t2.setAttribute('src',   tri2URL);
-  t3.setAttribute('src',   tri3URL);
-  t4.setAttribute('src',   tri4URL);
+  // Apply textures (use getAssetURL at runtime to ensure correct base path)
+  base.setAttribute('src', getAssetURL(cardBaseURLRaw_final));
+  text.setAttribute('src', getAssetURL(cardTextURLRaw_final));
+  t1.setAttribute('src',   getAssetURL(tri1URLRaw_final));
+  t2.setAttribute('src',   getAssetURL(tri2URLRaw_final));
+  t3.setAttribute('src',   getAssetURL(tri3URLRaw_final));
+  t4.setAttribute('src',   getAssetURL(tri4URLRaw_final));
   
   // Add fade out animation for base layer
   base.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-text');
