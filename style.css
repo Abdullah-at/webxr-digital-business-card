@@ -154,14 +154,13 @@ a-image {
 }
 
 #tracker-overlay img {
-  width: auto;
+  width: 30vw;
   height: auto;
-  max-width: 60vw;
-  max-height: 60vh;
-  min-width: 200px;
-  min-height: 200px;
+  max-width: 40vw;
+  max-height: 40vh;
   object-fit: contain;
   object-position: center;
+  image-rendering: auto;
 }
 
 #tracker-overlay.hidden {
