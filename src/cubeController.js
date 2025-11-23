@@ -139,12 +139,23 @@ export class CubeController {
     return duration < 200; // Less than 200ms = tap, not drag
   }
 
-  // Reset rotation to initial state
+  // Reset rotation to initial state - smooth animation
   resetRotation() {
-    this.rotation = { x: 0, y: 0 };
-    if (this.cubeObject3D) {
-      this.cubeObject3D.rotation.set(0, 0, 0);
+    if (this.cubeEntity) {
+      const currentRotation = this.cubeEntity.getAttribute('rotation');
+      const currentRotationY = currentRotation ? currentRotation.y : 0;
+      
+      // Use A-Frame animation for smooth reset
+      this.cubeEntity.setAttribute('animation__reset', 
+        `property: rotation; 
+         from: ${currentRotation.x || 0} ${currentRotationY} ${currentRotation.z || 0}; 
+         to: 0 0 0; 
+         dur: 1200; 
+         easing: easeInOutQuad`);
     }
+    
+    this.rotation = { x: 0, y: 0 };
+    console.log('[CubeController] Resetting rotation smoothly');
   }
 
   // Get current rotation for debugging

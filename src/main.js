@@ -10,6 +10,14 @@ import tri3URL     from '/assets/Triangles3.png';
 import tri4URL     from '/assets/Triangles4.png';
 import artURL      from '/assets/Art.png';
 import aboutMeURL  from '/assets/AboutMe.png';
+import wanS0URL    from '/assets/WAN_S0.png';
+import wanS1URL    from '/assets/WAN_S1.png';
+import wanS2URL    from '/assets/WAN_S2.png';
+import wanS3URL    from '/assets/WAN_S3.png';
+import wanS4URL    from '/assets/WAN_S4.png';
+import vendettaURL from '/assets/Vendetta.png';
+import vendettaCubeURL from '/assets/Vendetta_Cube.png';
+import vendettaVideoURL from '/assets/Vendetta.mp4';
 
 // Import Cube Controller and Faces
 import { CubeController } from './cubeController.js';
@@ -74,6 +82,99 @@ window.addEventListener('DOMContentLoaded', () => {
   aboutMeLayer.setAttribute('material', 'opacity:0');
   aboutMeLayer.setAttribute('src', aboutMeURL);
   
+  // WAN Slide layers (5 slides: S0, S1, S2, S3, S4)
+  const wanSlides = [
+    makeLayer('wanSlide0', 0.009),
+    makeLayer('wanSlide1', 0.009),
+    makeLayer('wanSlide2', 0.009),
+    makeLayer('wanSlide3', 0.009),
+    makeLayer('wanSlide4', 0.009)
+  ];
+  
+  wanSlides[0].setAttribute('src', wanS0URL);
+  wanSlides[1].setAttribute('src', wanS1URL);
+  wanSlides[2].setAttribute('src', wanS2URL);
+  wanSlides[3].setAttribute('src', wanS3URL);
+  wanSlides[4].setAttribute('src', wanS4URL);
+  
+  wanSlides.forEach((slide, index) => {
+    slide.setAttribute('visible', false);
+    slide.setAttribute('material', 'opacity:0');
+    slide.setAttribute('animation__fadein', 'property: material.opacity; from: 0; to: 1; dur: 800; easing: easeInOutQuad; startEvents: show-wan-slide');
+    slide.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-wan-slide');
+  });
+  
+  // Vendetta layer
+  const vendettaLayer = makeLayer('vendettaLayer', 0.009);
+  vendettaLayer.setAttribute('visible', false);
+  vendettaLayer.setAttribute('material', 'opacity:0');
+  vendettaLayer.setAttribute('src', vendettaURL);
+  vendettaLayer.setAttribute('animation__fadein', 'property: material.opacity; from: 0; to: 1; dur: 800; easing: easeInOutQuad; startEvents: show-vendetta');
+  vendettaLayer.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-vendetta');
+  
+  // Vendetta video element (positioned at bottom center of Vendetta.png, in front)
+  const vendettaVideo = document.createElement('a-video');
+  vendettaVideo.setAttribute('id', 'vendettaVideo');
+  vendettaVideo.setAttribute('src', vendettaVideoURL);
+  vendettaVideo.setAttribute('width', '1.2');
+  vendettaVideo.setAttribute('height', '0.66'); // 16:9 aspect ratio
+  // Position: bottom center, z=0.010 (in front of Vendetta layer at 0.009), y adjusted to align bottom with Vendetta.png
+  vendettaVideo.setAttribute('position', '0 -0.15 0.030'); // Moved up more to align bottom with Vendetta.png
+  vendettaVideo.setAttribute('visible', false);
+  vendettaVideo.setAttribute('material', 'opacity:0');
+  vendettaVideo.setAttribute('animation__fadein', 'property: material.opacity; from: 0; to: 1; dur: 800; easing: easeInOutQuad; startEvents: show-vendetta-video');
+  vendettaVideo.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-vendetta-video');
+  // Enable autoplay and loop for video
+  vendettaVideo.setAttribute('autoplay', false);
+  vendettaVideo.setAttribute('loop', false);
+  markerRoot.appendChild(vendettaVideo);
+  
+  // Track video playing state
+  let isVendettaVideoPlaying = false;
+  
+  // Helper function to get the HTML5 video element
+  const getVendettaVideoElement = () => {
+    let videoEl = null;
+    
+    if (vendettaVideo.components && vendettaVideo.components.material) {
+      const material = vendettaVideo.components.material.material;
+      if (material && material.map && material.map.image) {
+        videoEl = material.map.image;
+      }
+    }
+    
+    // Fallback: try to find video element in the scene
+    if (!videoEl || videoEl.tagName !== 'VIDEO') {
+      videoEl = document.querySelector('#vendettaVideo video');
+    }
+    
+    return (videoEl && videoEl.tagName === 'VIDEO') ? videoEl : null;
+  };
+  
+  // Get the actual HTML5 video element when it loads and set up event listeners
+  vendettaVideo.addEventListener('loadeddata', () => {
+    const videoEl = getVendettaVideoElement();
+    if (videoEl) {
+      console.log('[VENDETTA] Video element ready');
+      
+      // Track video state changes
+      videoEl.addEventListener('play', () => {
+        isVendettaVideoPlaying = true;
+        updateVendettaPlayButton();
+      });
+      
+      videoEl.addEventListener('pause', () => {
+        isVendettaVideoPlaying = false;
+        updateVendettaPlayButton();
+      });
+      
+      videoEl.addEventListener('ended', () => {
+        isVendettaVideoPlaying = false;
+        updateVendettaPlayButton();
+      });
+    }
+  });
+  
   // Fade animations for About Me sequence layers
   artLayer.setAttribute('animation__fadein', 'property: material.opacity; from: 0; to: 1; dur: 800; easing: easeInOutQuad; startEvents: show-art');
   artLayer.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-art');
@@ -88,12 +189,18 @@ window.addEventListener('DOMContentLoaded', () => {
   t2.setAttribute('src',   tri2URL);
   t3.setAttribute('src',   tri3URL);
   t4.setAttribute('src',   tri4URL);
+  
+  // Add fade out animation for base layer
+  base.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-text');
 
   [t1,t2,t3,t4].forEach(el => el.setAttribute('opacity','0.5'));
 
   // Animations
   text.setAttribute('animation__fade', 'property: material.opacity; from: 1; to: 0; dur: 1200; easing: easeInOutQuad; startEvents: start-fade');
   text.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-text');
+  
+  // Base layer fade out animation
+  base.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-text');
   
   const pulse = (el, name, delay) => {
     el.setAttribute(`animation__${name}`, `property: material.opacity; from: 0.25; to: 1; dir: alternate; loop: true; dur: 900; easing: easeInOutSine; delay: ${delay}; startEvents: pulse-start; pauseEvents: pulse-stop`);
@@ -177,6 +284,50 @@ window.addEventListener('DOMContentLoaded', () => {
   const cubeController = new CubeController(cube);
   console.log('[MAIN] CubeController initialized');
   
+  // Function to rotate cube to show Net.jpeg side (right side = -90 degrees on Y axis) - smooth animation
+  const rotateCubeToNet = () => {
+    if (cubeController.cubeObject3D) {
+      const targetRotationY = -90; // -90 degrees on Y
+      const currentRotation = cube.getAttribute('rotation');
+      const currentRotationY = currentRotation ? currentRotation.y : 0;
+      
+      // Use A-Frame animation for smooth rotation
+      cube.setAttribute('animation__rotate', 
+        `property: rotation; 
+         from: ${currentRotation.x || 0} ${currentRotationY} ${currentRotation.z || 0}; 
+         to: 0 ${targetRotationY} 0; 
+         dur: 1200; 
+         easing: easeInOutQuad`);
+      
+      // Update controller state (convert to radians)
+      cubeController.rotation = { x: 0, y: targetRotationY * Math.PI / 180 };
+      
+      console.log('[CUBE] Rotating smoothly to show Net.jpeg side');
+    }
+  };
+  
+  // Function to rotate cube to show Vendetta_Cube.png side (left side = 90 degrees on Y axis) - smooth animation
+  const rotateCubeToVendetta = () => {
+    if (cubeController.cubeObject3D) {
+      const targetRotationY = 90; // 90 degrees on Y (left side)
+      const currentRotation = cube.getAttribute('rotation');
+      const currentRotationY = currentRotation ? currentRotation.y : 0;
+      
+      // Use A-Frame animation for smooth rotation
+      cube.setAttribute('animation__rotate', 
+        `property: rotation; 
+         from: ${currentRotation.x || 0} ${currentRotationY} ${currentRotation.z || 0}; 
+         to: 0 ${targetRotationY} 0; 
+         dur: 1200; 
+         easing: easeInOutQuad`);
+      
+      // Update controller state (convert to radians)
+      cubeController.rotation = { x: 0, y: targetRotationY * Math.PI / 180 };
+      
+      console.log('[CUBE] Rotating smoothly to show Vendetta_Cube.png side');
+    }
+  };
+  
   // ---------- Cube Faces (Interactive Buttons) ----------
   // Add button labels to each face of the cube
   const cubeFaces = new CubeFaces(cube, markerRoot);
@@ -249,6 +400,7 @@ window.addEventListener('DOMContentLoaded', () => {
     
     // Hide base layer
     base.setAttribute('visible', false);
+    base.setAttribute('material', 'opacity:1'); // Reset opacity for next time
     
     // Hide cube when target lost
     cube.setAttribute('visible', false);
@@ -258,6 +410,39 @@ window.addEventListener('DOMContentLoaded', () => {
     artLayer.setAttribute('material', 'opacity:0');
     aboutMeLayer.setAttribute('visible', false);
     aboutMeLayer.setAttribute('material', 'opacity:0');
+    
+    // Hide and reset WAN slides
+    wanSlides.forEach(slide => {
+      slide.setAttribute('visible', false);
+      slide.setAttribute('material', 'opacity:0');
+    });
+    const wanNav = document.getElementById('wan-nav-container');
+    if (wanNav) {
+      wanNav.style.display = 'none';
+    }
+    currentWANSlide = 0;
+    
+    // Hide and reset Vendetta content
+    vendettaLayer.setAttribute('visible', false);
+    vendettaLayer.setAttribute('material', 'opacity:0');
+      vendettaVideo.setAttribute('visible', false);
+      vendettaVideo.setAttribute('material', 'opacity:0');
+      // Stop video
+      const videoEl = getVendettaVideoElement();
+      if (videoEl) {
+        videoEl.pause();
+        videoEl.currentTime = 0;
+        isVendettaVideoPlaying = false;
+      }
+      
+      // Hide video controls
+      const controlsContainer = document.getElementById('vendetta-video-controls');
+      if (controlsContainer) {
+        controlsContainer.style.display = 'none';
+      }
+    
+    // Reset page state to home
+    currentPage = PAGE_STATE.HOME;
     
     // Hide HUD buttons when target lost
     const hud = document.getElementById('hud');
@@ -284,8 +469,14 @@ window.addEventListener('DOMContentLoaded', () => {
   markerRoot.addEventListener('targetFound', startSequence);
   markerRoot.addEventListener('targetLost',  stopSequence);
 
-  // ---------- Content Switching System ----------
-  let currentContent = null;
+  // ---------- Page State Management ----------
+  const PAGE_STATE = {
+    HOME: 'home',
+    ABOUT_ME: 'about-me',
+    WAN: 'wan',
+    VENDETTA: 'vendetta'
+  };
+  let currentPage = PAGE_STATE.HOME;
   
   const showContent = (contentName, imageUrl) => {
     if (currentContent === contentName) return; // Already showing
@@ -319,6 +510,8 @@ window.addEventListener('DOMContentLoaded', () => {
     // After fade out, restore text and triangles
     setTimeout(() => {
       content.setAttribute('visible', false);
+      base.setAttribute('visible', true);
+      base.setAttribute('material', 'opacity:1'); // Restore base opacity
       text.setAttribute('material', 'opacity:1');
       [t1, t2, t3, t4].forEach(el => {
         el.setAttribute('material', 'opacity:0.5');
@@ -402,15 +595,517 @@ END:VCARD`;
         console.log('[CUBE] vCard download triggered for +41787414241');
         break;
         
-      case 'left': // LinkedIn
-        console.log('[CUBE] Opening LinkedIn...');
-        window.open('https://linkedin.com/in/abdullah-barzinji', '_blank');
+      case 'left': // Vendetta (replaced LinkedIn)
+        console.log('[CUBE] Vendetta button clicked - showing presentation');
+        // Show Vendetta presentation when cube face is clicked
+        showVendettaPresentation();
         break;
         
       default:
         console.log(`[CUBE] No action for ${faceName}`);
         break;
     }
+  };
+  
+  // ---------- WAN Slide Viewer ----------
+  let currentWANSlide = 0;
+  const totalWANSlides = 5;
+  
+  // ---------- Page Transition Functions ----------
+  const showHomePage = () => {
+    console.log('[PAGE] Showing home page');
+    currentPage = PAGE_STATE.HOME;
+    
+    // Hide all other content
+    artLayer.emit('hide-art');
+    aboutMeLayer.emit('hide-aboutme');
+    wanSlides.forEach(slide => slide.emit('hide-wan-slide'));
+    vendettaLayer.emit('hide-vendetta');
+    vendettaVideo.emit('hide-vendetta-video');
+    
+    // Stop video if playing
+    const videoEl = getVendettaVideoElement();
+    if (videoEl) {
+      videoEl.pause();
+      videoEl.currentTime = 0;
+      isVendettaVideoPlaying = false;
+    }
+    
+    // Hide WAN navigation
+    const wanNav = document.getElementById('wan-nav-container');
+    if (wanNav) {
+      wanNav.style.display = 'none';
+    }
+    
+    // After fade out, show home elements
+    setTimeout(() => {
+      // Hide About Me, WAN, and Vendetta content
+      artLayer.setAttribute('visible', false);
+      artLayer.setAttribute('material', 'opacity:0');
+      aboutMeLayer.setAttribute('visible', false);
+      aboutMeLayer.setAttribute('material', 'opacity:0');
+      wanSlides.forEach(slide => {
+        slide.setAttribute('visible', false);
+        slide.setAttribute('material', 'opacity:0');
+      });
+      vendettaLayer.setAttribute('visible', false);
+      vendettaLayer.setAttribute('material', 'opacity:0');
+      vendettaVideo.setAttribute('visible', false);
+      vendettaVideo.setAttribute('material', 'opacity:0');
+      
+      // Show home elements: base, text, triangles
+      base.setAttribute('visible', true);
+      base.setAttribute('material', 'opacity:1');
+      text.setAttribute('visible', true);
+      text.setAttribute('material', 'opacity:1');
+      [t1, t2, t3, t4].forEach(el => {
+        el.setAttribute('visible', true);
+        el.setAttribute('material', 'opacity:0.5');
+        el.emit('pulse-start');
+      });
+      
+      // Reset cube rotation
+      cubeController.resetRotation();
+      
+      console.log('[PAGE] Home page displayed');
+    }, 900);
+  };
+  
+  const showAboutMePage = () => {
+    console.log('[PAGE] Showing About Me page');
+    const previousPage = currentPage;
+    currentPage = PAGE_STATE.ABOUT_ME;
+    
+    // Fade out current page content based on previous state
+    if (previousPage === PAGE_STATE.VENDETTA) {
+      // Coming from Vendetta: fade out Vendetta content
+      vendettaLayer.emit('hide-vendetta');
+      vendettaVideo.emit('hide-vendetta-video');
+      const videoEl = getVendettaVideoElement();
+      if (videoEl) {
+        videoEl.pause();
+        videoEl.currentTime = 0;
+        isVendettaVideoPlaying = false;
+      }
+    } else if (previousPage === PAGE_STATE.WAN) {
+      // Coming from WAN: fade out WAN slides
+      wanSlides.forEach(slide => slide.emit('hide-wan-slide'));
+      const wanNav = document.getElementById('wan-nav-container');
+      if (wanNav) {
+        wanNav.style.display = 'none';
+      }
+    } else {
+      // Coming from home: fade out text and triangles
+      [t1, t2, t3, t4].forEach(el => el.emit('pulse-stop'));
+      text.emit('hide-text');
+      [t1, t2, t3, t4].forEach(el => el.emit('hide-triangles'));
+    }
+    
+    // Ensure base stays visible
+    base.setAttribute('visible', true);
+    base.setAttribute('material', 'opacity:1');
+    
+    // After fade out, show About Me content
+    setTimeout(() => {
+      // Hide previous content
+      if (previousPage === PAGE_STATE.VENDETTA) {
+        vendettaLayer.setAttribute('visible', false);
+        vendettaLayer.setAttribute('material', 'opacity:0');
+        vendettaVideo.setAttribute('visible', false);
+        vendettaVideo.setAttribute('material', 'opacity:0');
+      } else if (previousPage === PAGE_STATE.WAN) {
+        wanSlides.forEach(slide => {
+          slide.setAttribute('visible', false);
+          slide.setAttribute('material', 'opacity:0');
+        });
+      } else {
+        text.setAttribute('visible', false);
+        [t1, t2, t3, t4].forEach(el => {
+          el.setAttribute('visible', false);
+          el.setAttribute('material', 'opacity:0');
+        });
+      }
+      
+      // Show Art.png first
+      artLayer.setAttribute('visible', true);
+      artLayer.setAttribute('material', 'opacity:0');
+      artLayer.emit('show-art');
+      
+      // Then show AboutMe.png after Art fades in
+      setTimeout(() => {
+        aboutMeLayer.setAttribute('visible', true);
+        aboutMeLayer.setAttribute('material', 'opacity:0');
+        aboutMeLayer.emit('show-aboutme');
+        console.log('[PAGE] About Me page displayed');
+      }, 800);
+      
+      // Reset cube rotation
+      cubeController.resetRotation();
+    }, 900);
+  };
+  
+  const showWANPresentation = () => {
+    console.log('[PAGE] Showing WAN presentation');
+    const previousPage = currentPage;
+    currentPage = PAGE_STATE.WAN;
+    
+    // Fade out current page content based on previous state
+    if (previousPage === PAGE_STATE.ABOUT_ME) {
+      // Coming from About Me: fade out Art and AboutMe
+      artLayer.emit('hide-art');
+      aboutMeLayer.emit('hide-aboutme');
+    } else if (previousPage === PAGE_STATE.VENDETTA) {
+      // Coming from Vendetta: fade out Vendetta content
+      vendettaLayer.emit('hide-vendetta');
+      vendettaVideo.emit('hide-vendetta-video');
+      const videoEl = getVendettaVideoElement();
+      if (videoEl) {
+        videoEl.pause();
+        videoEl.currentTime = 0;
+        isVendettaVideoPlaying = false;
+      }
+    } else {
+      // Coming from home: fade out text and triangles
+      [t1, t2, t3, t4].forEach(el => el.emit('pulse-stop'));
+      text.emit('hide-text');
+      [t1, t2, t3, t4].forEach(el => el.emit('hide-triangles'));
+    }
+    
+    // Rotate cube to show Net.jpeg side
+    setTimeout(() => {
+      rotateCubeToNet();
+    }, 100);
+    
+    // After fade out, show WAN slides
+    setTimeout(() => {
+      // Hide previous content
+      if (previousPage === PAGE_STATE.ABOUT_ME) {
+        artLayer.setAttribute('visible', false);
+        artLayer.setAttribute('material', 'opacity:0');
+        aboutMeLayer.setAttribute('visible', false);
+        aboutMeLayer.setAttribute('material', 'opacity:0');
+      } else if (previousPage === PAGE_STATE.VENDETTA) {
+        vendettaLayer.setAttribute('visible', false);
+        vendettaLayer.setAttribute('material', 'opacity:0');
+        vendettaVideo.setAttribute('visible', false);
+        vendettaVideo.setAttribute('material', 'opacity:0');
+      } else {
+        text.setAttribute('visible', false);
+        [t1, t2, t3, t4].forEach(el => {
+          el.setAttribute('visible', false);
+          el.setAttribute('material', 'opacity:0');
+        });
+      }
+      
+      // Hide base (WAN slides replace everything)
+      base.setAttribute('visible', false);
+      base.setAttribute('material', 'opacity:0');
+      
+      // Show first WAN slide
+      wanSlides.forEach(slide => {
+        slide.setAttribute('visible', false);
+        slide.setAttribute('material', 'opacity:0');
+      });
+      
+      currentWANSlide = 0;
+      wanSlides[0].setAttribute('visible', true);
+      wanSlides[0].setAttribute('material', 'opacity:0');
+      wanSlides[0].emit('show-wan-slide');
+      
+      // Create navigation buttons if they don't exist
+      createWANNavigation();
+      updateWANNavButtons();
+      
+      console.log('[PAGE] WAN presentation displayed');
+    }, 900);
+  };
+  
+  const showVendettaPresentation = () => {
+    console.log('[PAGE] Showing Vendetta presentation');
+    const previousPage = currentPage;
+    currentPage = PAGE_STATE.VENDETTA;
+    
+    // Fade out current page content based on previous state
+    if (previousPage === PAGE_STATE.ABOUT_ME) {
+      // Coming from About Me: fade out Art and AboutMe
+      artLayer.emit('hide-art');
+      aboutMeLayer.emit('hide-aboutme');
+    } else if (previousPage === PAGE_STATE.WAN) {
+      // Coming from WAN: fade out WAN slides
+      wanSlides.forEach(slide => slide.emit('hide-wan-slide'));
+      const wanNav = document.getElementById('wan-nav-container');
+      if (wanNav) {
+        wanNav.style.display = 'none';
+      }
+    } else {
+      // Coming from home: fade out text and triangles
+      [t1, t2, t3, t4].forEach(el => el.emit('pulse-stop'));
+      text.emit('hide-text');
+      [t1, t2, t3, t4].forEach(el => el.emit('hide-triangles'));
+    }
+    
+    // Rotate cube to show Vendetta_Cube.png side (smoothly)
+    setTimeout(() => {
+      rotateCubeToVendetta();
+    }, 100);
+    
+    // After fade out, show Vendetta content
+    setTimeout(() => {
+      // Hide previous content
+      if (previousPage === PAGE_STATE.ABOUT_ME) {
+        artLayer.setAttribute('visible', false);
+        artLayer.setAttribute('material', 'opacity:0');
+        aboutMeLayer.setAttribute('visible', false);
+        aboutMeLayer.setAttribute('material', 'opacity:0');
+      } else if (previousPage === PAGE_STATE.WAN) {
+        wanSlides.forEach(slide => {
+          slide.setAttribute('visible', false);
+          slide.setAttribute('material', 'opacity:0');
+        });
+      } else {
+        text.setAttribute('visible', false);
+        [t1, t2, t3, t4].forEach(el => {
+          el.setAttribute('visible', false);
+          el.setAttribute('material', 'opacity:0');
+        });
+      }
+      
+      // Hide base (Vendetta replaces everything)
+      base.setAttribute('visible', false);
+      base.setAttribute('material', 'opacity:0');
+      
+      // Show Vendetta layer
+      vendettaLayer.setAttribute('visible', true);
+      vendettaLayer.setAttribute('material', 'opacity:0');
+      vendettaLayer.emit('show-vendetta');
+      
+      // Show video after Vendetta layer fades in
+      setTimeout(() => {
+        vendettaVideo.setAttribute('visible', true);
+        vendettaVideo.setAttribute('material', 'opacity:0');
+        vendettaVideo.emit('show-vendetta-video');
+        
+        // Create video controls if they don't exist
+        createVendettaVideoControls();
+        
+        console.log('[PAGE] Vendetta presentation displayed with video');
+      }, 800);
+      
+      console.log('[PAGE] Vendetta presentation displayed');
+    }, 900);
+  };
+  
+  const createVendettaVideoControls = () => {
+    let controlsContainer = document.getElementById('vendetta-video-controls');
+    
+    if (!controlsContainer) {
+      controlsContainer = document.createElement('div');
+      controlsContainer.id = 'vendetta-video-controls';
+      controlsContainer.className = 'wan-navigation'; // Reuse WAN navigation styles (positioned on right side)
+      // Keep default WAN navigation positioning (right side, vertical)
+      
+      // Play/Pause button
+      const playPauseBtn = document.createElement('button');
+      playPauseBtn.className = 'wan-nav-btn vendetta-play-pause';
+      playPauseBtn.innerHTML = '▶';
+      playPauseBtn.addEventListener('click', () => {
+        toggleVendettaVideo();
+      });
+      controlsContainer.appendChild(playPauseBtn);
+      
+      // Close button
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'wan-nav-btn wan-nav-close';
+      closeBtn.innerHTML = '✕';
+      closeBtn.addEventListener('click', () => {
+        closeVendettaPresentation();
+      });
+      controlsContainer.appendChild(closeBtn);
+      
+      document.body.appendChild(controlsContainer);
+      console.log('[VENDETTA] Video controls created');
+    }
+    
+    controlsContainer.style.display = 'flex';
+    updateVendettaPlayButton();
+  };
+  
+  const toggleVendettaVideo = () => {
+    const videoEl = getVendettaVideoElement();
+    
+    if (!videoEl) {
+      console.warn('[VENDETTA] Video element not found');
+      return;
+    }
+    
+    if (isVendettaVideoPlaying) {
+      videoEl.pause();
+      isVendettaVideoPlaying = false;
+      console.log('[VENDETTA] Video paused');
+    } else {
+      videoEl.play().catch(err => {
+        console.error('[VENDETTA] Error playing video:', err);
+      });
+      isVendettaVideoPlaying = true;
+      console.log('[VENDETTA] Video playing');
+    }
+    
+    updateVendettaPlayButton();
+  };
+  
+  const updateVendettaPlayButton = () => {
+    const playPauseBtn = document.querySelector('.vendetta-play-pause');
+    if (playPauseBtn) {
+      playPauseBtn.innerHTML = isVendettaVideoPlaying ? '⏸' : '▶';
+    }
+  };
+  
+  const closeVendettaPresentation = () => {
+    console.log('[VENDETTA] Closing Vendetta presentation, returning to home');
+    
+    // Hide video controls
+    const controlsContainer = document.getElementById('vendetta-video-controls');
+    if (controlsContainer) {
+      controlsContainer.style.display = 'none';
+    }
+    
+    // Fade out Vendetta content
+    vendettaLayer.emit('hide-vendetta');
+    vendettaVideo.emit('hide-vendetta-video');
+    
+    // Stop video if playing
+    const videoEl = getVendettaVideoElement();
+    if (videoEl) {
+      videoEl.pause();
+      videoEl.currentTime = 0; // Reset to beginning
+      isVendettaVideoPlaying = false;
+    }
+    
+    // After fade out, restore home page
+    setTimeout(() => {
+      vendettaLayer.setAttribute('visible', false);
+      vendettaLayer.setAttribute('material', 'opacity:0');
+      vendettaVideo.setAttribute('visible', false);
+      vendettaVideo.setAttribute('material', 'opacity:0');
+      
+      // Reset cube rotation
+      cubeController.resetRotation();
+      
+      // Restore home page elements
+      showHomePage();
+    }, 800);
+  };
+  
+  // Define helper functions BEFORE createWANNavigation so they're available when event listeners are created
+  const goToWANSlide = (slideIndex) => {
+    if (slideIndex < 0 || slideIndex >= totalWANSlides) return;
+    
+    // Fade out current slide
+    wanSlides[currentWANSlide].emit('hide-wan-slide');
+    
+    setTimeout(() => {
+      wanSlides[currentWANSlide].setAttribute('visible', false);
+      currentWANSlide = slideIndex;
+      wanSlides[currentWANSlide].setAttribute('visible', true);
+      wanSlides[currentWANSlide].setAttribute('material', 'opacity:0');
+      wanSlides[currentWANSlide].emit('show-wan-slide');
+      updateWANIndicator();
+      updateWANNavButtons();
+      console.log(`[WAN] Switched to slide ${slideIndex + 1}`);
+    }, 400);
+  };
+  
+  const updateWANIndicator = () => {
+    const indicator = document.getElementById('wan-slide-indicator');
+    if (indicator) {
+      indicator.textContent = `${currentWANSlide + 1} / ${totalWANSlides}`;
+    }
+  };
+  
+  const updateWANNavButtons = () => {
+    const prevBtn = document.querySelector('.wan-nav-prev');
+    const nextBtn = document.querySelector('.wan-nav-next');
+    if (prevBtn) prevBtn.disabled = currentWANSlide === 0;
+    if (nextBtn) nextBtn.disabled = currentWANSlide === totalWANSlides - 1;
+  };
+  
+  const createWANNavigation = () => {
+    let navContainer = document.getElementById('wan-nav-container');
+    
+    if (!navContainer) {
+      navContainer = document.createElement('div');
+      navContainer.id = 'wan-nav-container';
+      navContainer.className = 'wan-navigation';
+      
+      // Previous button
+      const prevBtn = document.createElement('button');
+      prevBtn.className = 'wan-nav-btn wan-nav-prev';
+      prevBtn.innerHTML = '◀';
+      prevBtn.addEventListener('click', () => {
+        if (currentWANSlide > 0) {
+          goToWANSlide(currentWANSlide - 1);
+        }
+      });
+      navContainer.appendChild(prevBtn);
+      
+      // Slide indicator
+      const indicator = document.createElement('div');
+      indicator.id = 'wan-slide-indicator';
+      indicator.className = 'wan-slide-indicator';
+      navContainer.appendChild(indicator);
+      
+      // Next button
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'wan-nav-btn wan-nav-next';
+      nextBtn.innerHTML = '▶';
+      nextBtn.addEventListener('click', () => {
+        if (currentWANSlide < totalWANSlides - 1) {
+          goToWANSlide(currentWANSlide + 1);
+        }
+      });
+      navContainer.appendChild(nextBtn);
+      
+      // Close button
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'wan-nav-btn wan-nav-close';
+      closeBtn.innerHTML = '✕';
+      closeBtn.addEventListener('click', () => {
+        closeWANPresentation();
+      });
+      navContainer.appendChild(closeBtn);
+      
+      // Add navigation to body as DOM overlay (not A-Frame entity)
+      document.body.appendChild(navContainer);
+      updateWANIndicator();
+    }
+    
+    navContainer.style.display = 'flex';
+  };
+  
+  const closeWANPresentation = () => {
+    console.log('[WAN] Closing WAN presentation, returning to home');
+    
+    // Hide navigation
+    const navContainer = document.getElementById('wan-nav-container');
+    if (navContainer) {
+      navContainer.style.display = 'none';
+    }
+    
+    // Fade out all slides
+    wanSlides.forEach(slide => {
+      slide.emit('hide-wan-slide');
+    });
+    
+    // After fade out, restore home page
+    setTimeout(() => {
+      wanSlides.forEach(slide => {
+        slide.setAttribute('visible', false);
+        slide.setAttribute('material', 'opacity:0');
+      });
+      
+      // Restore home page elements
+      showHomePage();
+    }, 800);
   };
   
   // ---------- HUD Button Handlers ----------
@@ -431,30 +1126,8 @@ END:VCARD`;
       aboutMeTimers.forEach(timer => clearTimeout(timer));
       aboutMeTimers = [];
       
-      // Stop triangle pulses first
-      [t1, t2, t3, t4].forEach(el => el.emit('pulse-stop'));
-      
-      // Fade out all four triangles and Card_Text
-      text.emit('hide-text');
-      [t1, t2, t3, t4].forEach(el => el.emit('hide-triangles'));
-      
-      // Wait for triangles and text to fade out (800ms + 300ms buffer), then show Art.png
-      const timer1 = setTimeout(() => {
-        artLayer.setAttribute('visible', true);
-        artLayer.setAttribute('material', 'opacity:0');
-        artLayer.emit('show-art');
-        console.log('[HUD] Art.png fading in (will stay visible)');
-        
-        // After Art fades in (800ms), fade in AboutMe.png (keep Art visible)
-        const timer2 = setTimeout(() => {
-          aboutMeLayer.setAttribute('visible', true);
-          aboutMeLayer.setAttribute('material', 'opacity:0');
-          aboutMeLayer.emit('show-aboutme');
-          console.log('[HUD] AboutMe.png fading in (Art and AboutMe now visible)');
-        }, 800); // Wait for Art fade in
-        aboutMeTimers.push(timer2);
-      }, 1100); // Wait for triangles and text fade out (800ms + 300ms buffer)
-      aboutMeTimers.push(timer1);
+      // Show About Me page (handles transitions from any page)
+      showAboutMePage();
     });
   }
   
@@ -486,7 +1159,15 @@ END:VCARD`;
           btn.addEventListener('click', (e) => {
             e.stopPropagation();
             console.log(`[HUD] Project clicked: ${project.label}`);
-            // TODO: Implement project navigation
+            
+            if (project.id === 'project-wan') {
+              // Show WAN presentation (handles transitions from any page)
+              showWANPresentation();
+            } else if (project.id === 'project-vendetta') {
+              // Show Vendetta presentation (handles transitions from any page)
+              showVendettaPresentation();
+            }
+            // TODO: Implement other project navigation
           });
           subButtonsContainer.appendChild(btn);
         });

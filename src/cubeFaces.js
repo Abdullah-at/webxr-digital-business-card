@@ -29,7 +29,7 @@ export class CubeFaces {
   }
 
   createFaceLabels() {
-    console.log('[CubeFaces] Adding 2 image buttons (LinkedIn + WhatsApp)...');
+    console.log('[CubeFaces] Adding 2 image buttons (LinkedIn + Net)...');
     
     // Buttons are CHILDREN of cube so they rotate with it
     // Positions are RELATIVE to cube's local origin (0,0,0)
@@ -43,45 +43,35 @@ export class CubeFaces {
       const basePath = window.AR_BASE_PATH || '/webxr-digital-business-card';
       
       // Build paths with base path
-      const linkedinSrc = `${basePath}/assets/linkedin.png`;
-      const whatsappSrc = `${basePath}/assets/Whatsapp.png`;
+      const vendettaCubeSrc = `${basePath}/assets/Vendetta_Cube.png`;
+      const netSrc = `${basePath}/assets/Net.jpeg`;
       
-      // Left side - LinkedIn
-      this.createImageButton('left', 'LinkedIn', linkedinSrc, 
+      // Left side - Vendetta_Cube (replacing LinkedIn)
+      this.createImageButton('left', 'Vendetta', vendettaCubeSrc, 
         `${-sideDistance} 0 0`, '0 -90 0', buttonSize);
       
-      // Right side - WhatsApp  
-      this.createImageButton('right', 'WhatsApp', whatsappSrc, 
+      // Right side - Net  
+      this.createImageButton('right', 'Net', netSrc, 
         `${sideDistance} 0 0`, '0 90 0', buttonSize);
       
-      console.log('[CubeFaces] 2 buttons created - LEFT: LinkedIn, RIGHT: WhatsApp');
-      console.log('[CubeFaces] LinkedIn path:', linkedinSrc, 'WhatsApp path:', whatsappSrc);
+      console.log('[CubeFaces] 2 buttons created - LEFT: Vendetta_Cube, RIGHT: Net');
+      console.log('[CubeFaces] Vendetta_Cube path:', vendettaCubeSrc, 'Net path:', netSrc);
     }, 1000);
   }
   
   createImageButton(name, label, imageSrc, position, rotation, size) {
-    // Create container for button + shadow
+    // Create container for button (no shadow)
     const container = document.createElement('a-entity');
     container.setAttribute('position', position);
     container.setAttribute('rotation', rotation);
     
-    // Shadow (behind button for depth)
-    const shadow = document.createElement('a-plane');
-    shadow.setAttribute('width', (size * 1.1).toString());
-    shadow.setAttribute('height', (size * 1.1).toString());
-    shadow.setAttribute('position', '0 0 -0.5');
-    shadow.setAttribute('color', '#000000');
-    shadow.setAttribute('opacity', '0.4');
-    shadow.setAttribute('material', 'side: double');
-    container.appendChild(shadow);
-    
-    // Image button
+    // Image button (no shadow, 70% opacity)
     const imageButton = document.createElement('a-image');
     imageButton.setAttribute('src', imageSrc);
     imageButton.setAttribute('width', size.toString());
     imageButton.setAttribute('height', size.toString());
     imageButton.setAttribute('position', '0 0 0');
-    imageButton.setAttribute('material', 'transparent: true; alphaTest: 0.1; side: double');
+    imageButton.setAttribute('material', 'transparent: true; alphaTest: 0.1; side: double; opacity: 0.7');
     imageButton.setAttribute('class', 'clickable face-button');
     imageButton.setAttribute('data-face', name);
     
@@ -103,7 +93,7 @@ export class CubeFaces {
     this.cubeEntity.appendChild(container);
     this.faces.push({ name, element: imageButton, label });
     
-    console.log(`[CubeFaces] Created ${name} button with shadow & tap animation: "${label}"`);
+    console.log(`[CubeFaces] Created ${name} button with 70% opacity & tap animation: "${label}"`);
   }
 
   // Get face by name

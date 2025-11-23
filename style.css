@@ -154,3 +154,66 @@ a-image {
 #tracker-overlay.hidden {
   display: none;
 }
+
+/* ----------------------------
+   WAN SLIDE NAVIGATION
+---------------------------- */
+.wan-navigation {
+  position: fixed;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 10px;
+  border-radius: 20px;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.2);
+  z-index: 15;
+  pointer-events: auto;
+}
+
+.wan-nav-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.wan-nav-btn:hover {
+  background: rgba(255,255,255,0.25);
+  transform: scale(1.1);
+}
+
+.wan-nav-btn:active {
+  transform: scale(0.95);
+}
+
+.wan-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.wan-slide-indicator {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 0;
+  text-align: center;
+  writing-mode: horizontal-tb;
+  min-width: 40px;
+}
