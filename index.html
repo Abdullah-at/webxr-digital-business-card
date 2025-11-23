@@ -4,44 +4,14 @@
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>WebXR Digital Business Card</title>
-    
-      <!-- Tracker overlay fallback styles (work even if external CSS fails) -->
-      <style>
-        /* Fullscreen overlay centered on camera view */
-        #tracker-overlay {
-          position: fixed;
-          inset: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: rgba(0, 0, 0, 0.35); /* slight dark tint */
-          z-index: 10;
-          pointer-events: none; /* don't block taps/clicks */
-        }
-    
-        /* Hide overlay when target is found (main.js adds .hidden) */
-        #tracker-overlay.hidden {
-          opacity: 0;
-          pointer-events: none;
-          display: none;
-        }
-    
-        /* Tracker image itself */
-        #tracker-img {
-          max-width: 80vmin;
-          width: 80vmin;
-          height: auto;
-          opacity: 0.85;
-          object-fit: contain;
-        }
-      </style>
-    
+
+      <!-- Styles - imported in main.js -->
+
       <!-- A-Frame + MindAR -->
       <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
       <script src="https://cdn.jsdelivr.net/npm/aframe-extras@7.5.2/dist/aframe-extras.min.js"></script>
       <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     </head>
-    
 
     <body>
       <!-- Custom Tracker Overlay (shown while scanning) -->
