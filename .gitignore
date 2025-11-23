@@ -137,3 +137,6 @@ dist
 
 # Large video files (over GitHub's 100MB limit)
 public/assets/Vendetta.mp4
+assets/Vendetta.mp4
+dist/assets/Vendetta.mp4
+**/Vendetta.mp4
