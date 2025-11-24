@@ -1,17 +1,52 @@
   <!doctype html>
   <html lang="en">
     <head>
-      <meta charset="utf-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <title>WebXR Digital Business Card</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WebXR Digital Business Card</title>
 
-      <!-- Styles - imported in main.js -->
+  <!-- Tracker overlay styles (applied both locally + on GitHub Pages) -->
+  <style>
+    /* Make sure the body doesn't scroll around the tracker image */
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
 
-      <!-- A-Frame + MindAR -->
-      <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
-      <script src="https://cdn.jsdelivr.net/npm/aframe-extras@7.5.2/dist/aframe-extras.min.js"></script>
-      <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-    </head>
+    /* Fullscreen overlay over the camera view */
+    #tracker-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;              /* or rgba(0, 0, 0, 0.35) for a tint */
+      z-index: 10;
+      pointer-events: none;                 /* don't block touches/clicks */
+    }
+
+    /* Hidden state – main.js adds this on targetFound */
+    #tracker-overlay.hidden {
+      display: none;
+      opacity: 0;
+    }
+
+    /* The tracker image itself */
+    #tracker-img {
+      max-width: min(80vw, 80vh);           /* scale nicely in the center */
+      height: auto;
+      opacity: 0.75;
+      object-fit: contain;
+    }
+  </style>
+
+  <!-- A-Frame + MindAR -->
+  <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aframe-extras@7.5.2/dist/aframe-extras.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+</head>
+
 
     <body>
       <!-- Custom Tracker Overlay (shown while scanning) -->
