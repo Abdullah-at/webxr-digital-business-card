@@ -1,15 +1,24 @@
-import basicSsl from '@vitejs/plugin-basic-ssl'
+import { defineConfig } from 'vite';
+import basicSsl from '@vitejs/plugin-basic-ssl';
 
-export default {
+export default defineConfig({
   plugins: [basicSsl()],
-  base: '/webxr-digital-business-card/', // GitHub Pages base path
+
+  // 👇 REQUIRED for GitHub Pages (your repo name)
+  base: '/webxr-digital-business-card/',
+
   server: {
     https: true,
-    host: true, // so you can test on phone via LAN later
-    port: 5173
+    host: true,   // allows mobile testing on LAN
+    port: 5173,
   },
+
   build: {
-    outDir: 'dist',
-    assetsDir: 'assets'
-  }
-}
+    outDir: 'dist',          // default build output folder
+    assetsDir: 'assets',     // keep assets organized
+    emptyOutDir: true,       // clean dist before each build
+    rollupOptions: {
+      input: '/index.html',  // this ensures index.html is the entry
+    },
+  },
+});
