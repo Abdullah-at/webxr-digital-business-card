@@ -1,6 +1,3 @@
-// ---------- Styles ----------
-import '../style.css';
-
 // ---------- Asset imports (Vite) ----------
 // Use Vite's import.meta.env.BASE_URL for proper base path handling
 const BASE_URL = import.meta.env.BASE_URL || '/';
