@@ -7,39 +7,38 @@
 
   <!-- Tracker overlay styles (applied both locally + on GitHub Pages) -->
   <style>
-    /* Make sure the body doesn't scroll around the tracker image */
     html, body {
       margin: 0;
       padding: 0;
       overflow: hidden;
     }
 
-    /* Fullscreen overlay over the camera view */
     #tracker-overlay {
       position: fixed;
       inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: transparent;              /* or rgba(0, 0, 0, 0.35) for a tint */
+      background: transparent;
       z-index: 10;
-      pointer-events: none;                 /* don't block touches/clicks */
+      pointer-events: none;
     }
 
-    /* Hidden state – main.js adds this on targetFound */
     #tracker-overlay.hidden {
       display: none;
       opacity: 0;
     }
 
-    /* The tracker image itself */
     #tracker-img {
-      max-width: min(80vw, 80vh);           /* scale nicely in the center */
+      max-width: min(80vw, 80vh);
       height: auto;
       opacity: 0.75;
       object-fit: contain;
     }
   </style>
+
+  <!-- Ensure main stylesheet is loaded on live site -->
+  <link rel="stylesheet" href="./style.css" />
 
   <!-- A-Frame + MindAR -->
   <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
