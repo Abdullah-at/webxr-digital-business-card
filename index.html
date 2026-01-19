@@ -67,14 +67,36 @@
       <script>
        // Detect base path from current URL (works locally + GitHub Pages)
 const path = window.location.pathname;
-// Remove "index.html" if present and trailing slash
+const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+// Detect base path from pathname
+// Vite dev server with base: '/webxr-digital-business-card/' serves from that path
+// So we need to detect it from the URL
 let BASE_PATH = path.replace(/\/index\.html$/, '');
 if (BASE_PATH.endsWith('/')) BASE_PATH = BASE_PATH.slice(0, -1);
+
+// On localhost with Vite, if pathname includes the base path, use it
+// Otherwise, if pathname is just '/', base path should be empty for root serving
+// But since vite.config.js has base: '/webxr-digital-business-card/', Vite serves from that path
+if (isLocalhost) {
+  // If pathname includes the base path, use it (Vite dev server behavior)
+  if (path.includes('/webxr-digital-business-card')) {
+    BASE_PATH = '/webxr-digital-business-card';
+  } else {
+    // If serving from root on localhost, base path is empty
+    BASE_PATH = '';
+  }
+} else {
+  // On GitHub Pages, ensure we have the base path
+  if (!BASE_PATH || BASE_PATH === '/') {
+    BASE_PATH = '/webxr-digital-business-card';
+  }
+}
 
 // Expose for other scripts (main.js, cubeFaces.js)
 window.AR_BASE_PATH = BASE_PATH;
 
-console.log('[INIT] Base path:', BASE_PATH, 'pathname:', path);
+console.log('[INIT] Base path:', BASE_PATH, 'pathname:', path, 'isLocalhost:', isLocalhost);
 
 // Set tracker image immediately (relative to base)
 const trackerImg = document.getElementById('tracker-img');

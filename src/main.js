@@ -7,51 +7,103 @@ const BASE_URL = import.meta.env.BASE_URL || '/';
 const getAssetURL = (url) => {
   if (!url) return url;
   
-  // Get base path at runtime (from window or import.meta.env)
-  const runtimeBase = (typeof window !== 'undefined' && window.AR_BASE_PATH) 
+  // Detect if we're on GitHub Pages or localhost
+  const isGitHubPages = typeof window !== 'undefined' && window.location.hostname.includes('github.io');
+  const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  
+  // Get base path at runtime (from window.AR_BASE_PATH set in index.html)
+  // This is already correctly detected in index.html based on the actual URL
+  let runtimeBase = (typeof window !== 'undefined' && window.AR_BASE_PATH) 
     ? window.AR_BASE_PATH 
     : (BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL);
   
-  // If URL already has protocol (http/https) or already includes base path, return as-is
-  if (url.startsWith('http') || url.includes('/webxr-digital-business-card/')) {
+  // Ensure base path format is correct
+  if (runtimeBase && runtimeBase !== '/') {
+    if (!runtimeBase.startsWith('/')) runtimeBase = '/' + runtimeBase;
+    if (runtimeBase.endsWith('/')) runtimeBase = runtimeBase.slice(0, -1);
+  } else {
+    runtimeBase = '';
+  }
+  
+  // On GitHub Pages, always ensure we have the base path
+  if (isGitHubPages && !runtimeBase) {
+    runtimeBase = '/webxr-digital-business-card';
+    console.warn(`[ASSET] ⚠️ runtimeBase was empty on GitHub Pages, using fallback: "${runtimeBase}"`);
+  }
+  
+  if (isLocalhost || isGitHubPages) {
+    console.log(`[ASSET] Processing URL: "${url}" | Runtime base path: "${runtimeBase}" (isLocalhost: ${isLocalhost}, isGitHubPages: ${isGitHubPages})`);
+  }
+  
+  // If URL already has protocol (http/https), check if it needs base path
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    // If it's a full URL but missing the base path on github.io, fix it
+    if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+      try {
+        const urlObj = new URL(url);
+        // If the pathname doesn't start with /webxr-digital-business-card/, add it
+        if (!urlObj.pathname.startsWith('/webxr-digital-business-card/')) {
+          const base = runtimeBase || '/webxr-digital-business-card';
+          const fixedPath = `${base}${urlObj.pathname}`;
+          const result = `${urlObj.origin}${fixedPath}${urlObj.search}${urlObj.hash}`;
+          console.log(`[ASSET FIX] Full URL missing base path: ${url} -> ${result} (runtimeBase: "${runtimeBase}")`);
+          return result;
+        }
+        // Already has base path
+        console.log(`[ASSET] ✅ Full URL already has base path: ${url}`);
+      } catch (e) {
+        console.warn('[ASSET] Failed to parse URL:', url, e);
+      }
+    }
+    return url;
+  }
+  
+  // If URL already includes base path, return as-is (Vite already added it)
+  // Vite uses the base path in both dev and production when base is set in vite.config.js
+  if (url.includes('/webxr-digital-business-card/')) {
+    // Preserve it - Vite handles the base path correctly in both environments
+    if (isLocalhost || isGitHubPages) {
+      console.log(`[ASSET] ✅ URL already has base path (preserving): ${url}`);
+    }
+    return url;
+  }
+  
+  // Handle absolute paths starting with / (from Vite builds or manual paths)
+  if (url.startsWith('/')) {
+    // On GitHub Pages, ALWAYS ensure base path is included for absolute paths
+    if (isGitHubPages) {
+      // If it doesn't have the base path, add it
+      if (!url.startsWith('/webxr-digital-business-card/')) {
+        // Ensure runtimeBase is set (should be /webxr-digital-business-card)
+        const base = runtimeBase || '/webxr-digital-business-card';
+        const result = `${base}${url}`;
+        console.log(`[ASSET] ⚠️ Adding base path to absolute path: ${url} -> ${result} (runtimeBase: "${runtimeBase}")`);
+        return result;
+      }
+      // If it already has base path, return as-is
+      console.log(`[ASSET] ✅ Absolute path already has base path: ${url}`);
+      return url;
+    }
+    // For localhost, return as-is (Vite dev server serves from root)
     return url;
   }
   
   // Handle relative paths (starting with 'assets/' or just the filename)
-  if (url.startsWith('assets/')) {
-    const result = `${runtimeBase}/${url}`;
-    if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
-      console.log(`[ASSET] ${url} -> ${result}`);
+  if (url.startsWith('assets/') || !url.includes('/')) {
+    // Use runtimeBase (which is empty on localhost, /webxr-digital-business-card on GitHub Pages)
+    const result = runtimeBase ? `${runtimeBase}/${url}` : `/${url}`;
+    if (isLocalhost) {
+      console.log(`[ASSET] 🏠 Localhost relative path: ${url} -> ${result} (base: "${runtimeBase}")`);
+    } else if (isGitHubPages) {
+      console.log(`[ASSET] Relative path ${url} -> ${result}`);
     }
     return result;
   }
   
-  // Handle absolute paths starting with / (but without base path)
-  if (url.startsWith('/')) {
-    // If it starts with /assets, it needs the base path
-    if (url.startsWith('/assets/')) {
-      const result = `${runtimeBase}${url}`;
-      if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
-        console.log(`[ASSET] ${url} -> ${result}`);
-      }
-      return result;
-    }
-    // If it already has the base path, return as-is
-    if (url.startsWith('/webxr-digital-business-card/')) {
-      return url;
-    }
-    // Otherwise, prepend base path
-    const result = `${runtimeBase}${url}`;
-    if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
-      console.log(`[ASSET] ${url} -> ${result}`);
-    }
-    return result;
-  }
-  
-  // Fallback: assume it needs base path
+  // Fallback: prepend base path
   const result = `${runtimeBase}/${url}`;
   if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
-    console.log(`[ASSET] ${url} -> ${result}`);
+    console.log(`[ASSET] Fallback ${url} -> ${result}`);
   }
   return result;
 };
@@ -130,6 +182,28 @@ window.addEventListener('DOMContentLoaded', () => {
     el.setAttribute('position', `${FIT.x} ${FIT.y} ${z}`);
     el.setAttribute('material', 'transparent:true; alphaTest:0.01; side:double; opacity:1');
     return el;
+  };
+
+  // Helper function to set asset src with error handling (must be defined before use)
+  const setAssetSrcWithErrorHandling = (element, url, name) => {
+    const assetURL = getAssetURL(url);
+    element.setAttribute('src', assetURL);
+    
+    // Log asset URLs on GitHub Pages for debugging
+    if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+      console.log(`[ASSET] Setting ${name}: ${assetURL}`);
+    }
+    
+    // Add error listener to detect failed loads
+    element.addEventListener('error', (e) => {
+      console.error(`[ASSET ERROR] Failed to load ${name}: ${assetURL}`, e);
+    });
+    
+    element.addEventListener('loaded', () => {
+      if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+        console.log(`[ASSET] Successfully loaded ${name}`);
+      }
+    });
   };
 
   // Layers
@@ -363,28 +437,6 @@ window.addEventListener('DOMContentLoaded', () => {
   aboutMeLayer.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-aboutme');
 
   // Apply textures (use getAssetURL at runtime to ensure correct base path)
-  // Add error handling for asset loading
-  const setAssetSrcWithErrorHandling = (element, url, name) => {
-    const assetURL = getAssetURL(url);
-    element.setAttribute('src', assetURL);
-    
-    // Log asset URLs on GitHub Pages for debugging
-    if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
-      console.log(`[ASSET] Setting ${name}: ${assetURL}`);
-    }
-    
-    // Add error listener to detect failed loads
-    element.addEventListener('error', (e) => {
-      console.error(`[ASSET ERROR] Failed to load ${name}: ${assetURL}`, e);
-    });
-    
-    element.addEventListener('loaded', () => {
-      if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
-        console.log(`[ASSET] Successfully loaded ${name}`);
-      }
-    });
-  };
-  
   setAssetSrcWithErrorHandling(base, cardBaseURLRaw_final, 'Card_Base.png');
   setAssetSrcWithErrorHandling(text, cardTextURLRaw_final, 'Card_Text.png');
   setAssetSrcWithErrorHandling(t1, tri1URLRaw_final, 'Triangles1.png');
