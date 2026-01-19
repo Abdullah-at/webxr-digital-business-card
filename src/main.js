@@ -7,22 +7,26 @@ const BASE_URL = import.meta.env.BASE_URL || '/';
 const getAssetURL = (url) => {
   if (!url) return url;
   
-  // Get base path at runtime (from window or import.meta.env)
+  // Detect if we're on GitHub Pages or localhost
+  const isGitHubPages = typeof window !== 'undefined' && window.location.hostname.includes('github.io');
+  const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  
+  // Get base path at runtime (from window.AR_BASE_PATH set in index.html)
+  // This is already correctly detected in index.html based on the actual URL
   let runtimeBase = (typeof window !== 'undefined' && window.AR_BASE_PATH) 
     ? window.AR_BASE_PATH 
     : (BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL);
   
-  // Ensure base path is set correctly on GitHub Pages
-  if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
-    // If AR_BASE_PATH is not set or empty, detect it from the current path
-    if (!runtimeBase || runtimeBase === '/' || runtimeBase === '') {
-      const path = window.location.pathname;
-      runtimeBase = path.replace(/\/index\.html$/, '').replace(/\/$/, '') || '/webxr-digital-business-card';
-      console.log(`[ASSET] Detected base path from URL: ${runtimeBase}`);
-    }
-    // Ensure it starts with / and doesn't end with /
+  // Ensure base path format is correct
+  if (runtimeBase && runtimeBase !== '/') {
     if (!runtimeBase.startsWith('/')) runtimeBase = '/' + runtimeBase;
     if (runtimeBase.endsWith('/')) runtimeBase = runtimeBase.slice(0, -1);
+  } else {
+    runtimeBase = '';
+  }
+  
+  if (isLocalhost || isGitHubPages) {
+    console.log(`[ASSET] Runtime base path: "${runtimeBase}" (isLocalhost: ${isLocalhost}, isGitHubPages: ${isGitHubPages})`);
   }
   
   // If URL already has protocol (http/https), check if it needs base path
@@ -46,19 +50,19 @@ const getAssetURL = (url) => {
   }
   
   // If URL already includes base path, return as-is (Vite already added it)
-  // This is the most common case - Vite builds include the base path in the URLs
+  // Vite uses the base path in both dev and production when base is set in vite.config.js
   if (url.includes('/webxr-digital-business-card/')) {
-    if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+    // Preserve it - Vite handles the base path correctly in both environments
+    if (isLocalhost || isGitHubPages) {
       console.log(`[ASSET] ✅ URL already has base path (preserving): ${url}`);
     }
     return url;
   }
   
   // Handle absolute paths starting with / (from Vite builds or manual paths)
-  // On GitHub Pages, these MUST include the base path
   if (url.startsWith('/')) {
     // On GitHub Pages, ensure base path is included
-    if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+    if (isGitHubPages) {
       // If it doesn't have the base path, add it
       if (!url.startsWith('/webxr-digital-business-card/')) {
         const result = `${runtimeBase}${url}`;
@@ -69,15 +73,17 @@ const getAssetURL = (url) => {
       console.log(`[ASSET] ✅ Absolute path already has base path: ${url}`);
       return url;
     }
-    // For local development, return as-is
+    // For localhost, return as-is (Vite dev server serves from root)
     return url;
   }
   
   // Handle relative paths (starting with 'assets/' or just the filename)
-  // These also need the base path prepended
   if (url.startsWith('assets/') || !url.includes('/')) {
-    const result = `${runtimeBase}/${url}`;
-    if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+    // Use runtimeBase (which is empty on localhost, /webxr-digital-business-card on GitHub Pages)
+    const result = runtimeBase ? `${runtimeBase}/${url}` : `/${url}`;
+    if (isLocalhost) {
+      console.log(`[ASSET] 🏠 Localhost relative path: ${url} -> ${result} (base: "${runtimeBase}")`);
+    } else if (isGitHubPages) {
       console.log(`[ASSET] Relative path ${url} -> ${result}`);
     }
     return result;
