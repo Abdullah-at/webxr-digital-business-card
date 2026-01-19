@@ -109,18 +109,18 @@ const getAssetURL = (url) => {
 };
 
 // Import assets (Vite will process these)
-import cardBaseURLRaw from '/assets/Card_Base.png';
-import cardTextURLRaw from '/assets/Card_Text.png';
-import tri1URLRaw     from '/assets/Triangles1.png';
-import tri2URLRaw     from '/assets/Triangles2.png';
-import tri3URLRaw     from '/assets/Triangles3.png';
-import tri4URLRaw     from '/assets/Triangles4.png';
-import artURLRaw      from '/assets/Art.png';
-import aboutMeURLRaw  from '/assets/AboutMe.mp4';
-import wanInfoVideoURLRaw from '/assets/WAN_Info.mp4';
-import vendettaURLRaw from '/assets/Vendetta.png';
-import vendettaCubeURLRaw from '/assets/Vendetta_Cube.png';
-import vendettaVideoURLRaw from '/assets/Vendetta.mp4';
+import cardBaseURLRaw from '/public/assets/Card_Base.png';
+import cardTextURLRaw from '/public/assets/Card_Text.png';
+import tri1URLRaw     from '/public/assets/Triangles1.png';
+import tri2URLRaw     from '/public/assets/Triangles2.png';
+import tri3URLRaw     from '/public/assets/Triangles3.png';
+import tri4URLRaw     from '/public/assets/Triangles4.png';
+import artURLRaw      from '/public/assets/Art.png';
+import aboutMeURLRaw  from '/public/assets/AboutMe.mp4';
+import wanInfoVideoURLRaw from '/public/assets/WAN_Info.mp4';
+import vendettaURLRaw from '/public/assets/Vendetta.png';
+import vendettaCubeURLRaw from '/public/assets/Vendetta_Cube.png';
+import vendettaVideoURLRaw from '/public/assets/Vendetta.mp4';
 
 // Store raw URLs - will be processed at runtime with getAssetURL()
 // This ensures window.AR_BASE_PATH is available when URLs are used
