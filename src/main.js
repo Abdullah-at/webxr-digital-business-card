@@ -45,19 +45,29 @@ const getAssetURL = (url) => {
     return url;
   }
   
-  // If URL already includes base path, return as-is
+  // If URL already includes base path, return as-is (Vite already added it)
   if (url.includes('/webxr-digital-business-card/')) {
+    if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+      console.log(`[ASSET] URL already has base path: ${url}`);
+    }
     return url;
   }
   
   // Handle absolute paths starting with / (most common case from Vite builds)
-  // These need the base path prepended
+  // IMPORTANT: Vite builds already include the base path, so if we see a path starting with /
+  // that doesn't have the base path, it means we're on GitHub Pages and need to add it
   if (url.startsWith('/')) {
-    const result = `${runtimeBase}${url}`;
+    // Check if we're on GitHub Pages and the path doesn't have base path
     if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
-      console.log(`[ASSET] Absolute path ${url} -> ${result}`);
+      // Only prepend base path if it's not already there
+      if (!url.startsWith('/webxr-digital-business-card/')) {
+        const result = `${runtimeBase}${url}`;
+        console.log(`[ASSET] Adding base path to absolute path: ${url} -> ${result}`);
+        return result;
+      }
     }
-    return result;
+    // For local development, return as-is
+    return url;
   }
   
   // Handle relative paths (starting with 'assets/' or just the filename)
