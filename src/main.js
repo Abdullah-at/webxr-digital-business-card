@@ -25,8 +25,14 @@ const getAssetURL = (url) => {
     runtimeBase = '';
   }
   
+  // On GitHub Pages, always ensure we have the base path
+  if (isGitHubPages && !runtimeBase) {
+    runtimeBase = '/webxr-digital-business-card';
+    console.warn(`[ASSET] ⚠️ runtimeBase was empty on GitHub Pages, using fallback: "${runtimeBase}"`);
+  }
+  
   if (isLocalhost || isGitHubPages) {
-    console.log(`[ASSET] Runtime base path: "${runtimeBase}" (isLocalhost: ${isLocalhost}, isGitHubPages: ${isGitHubPages})`);
+    console.log(`[ASSET] Processing URL: "${url}" | Runtime base path: "${runtimeBase}" (isLocalhost: ${isLocalhost}, isGitHubPages: ${isGitHubPages})`);
   }
   
   // If URL already has protocol (http/https), check if it needs base path
@@ -37,11 +43,14 @@ const getAssetURL = (url) => {
         const urlObj = new URL(url);
         // If the pathname doesn't start with /webxr-digital-business-card/, add it
         if (!urlObj.pathname.startsWith('/webxr-digital-business-card/')) {
-          const fixedPath = `/webxr-digital-business-card${urlObj.pathname}`;
+          const base = runtimeBase || '/webxr-digital-business-card';
+          const fixedPath = `${base}${urlObj.pathname}`;
           const result = `${urlObj.origin}${fixedPath}${urlObj.search}${urlObj.hash}`;
-          console.log(`[ASSET FIX] ${url} -> ${result}`);
+          console.log(`[ASSET FIX] Full URL missing base path: ${url} -> ${result} (runtimeBase: "${runtimeBase}")`);
           return result;
         }
+        // Already has base path
+        console.log(`[ASSET] ✅ Full URL already has base path: ${url}`);
       } catch (e) {
         console.warn('[ASSET] Failed to parse URL:', url, e);
       }
@@ -61,12 +70,14 @@ const getAssetURL = (url) => {
   
   // Handle absolute paths starting with / (from Vite builds or manual paths)
   if (url.startsWith('/')) {
-    // On GitHub Pages, ensure base path is included
+    // On GitHub Pages, ALWAYS ensure base path is included for absolute paths
     if (isGitHubPages) {
       // If it doesn't have the base path, add it
       if (!url.startsWith('/webxr-digital-business-card/')) {
-        const result = `${runtimeBase}${url}`;
-        console.log(`[ASSET] ⚠️ Adding base path to absolute path: ${url} -> ${result}`);
+        // Ensure runtimeBase is set (should be /webxr-digital-business-card)
+        const base = runtimeBase || '/webxr-digital-business-card';
+        const result = `${base}${url}`;
+        console.log(`[ASSET] ⚠️ Adding base path to absolute path: ${url} -> ${result} (runtimeBase: "${runtimeBase}")`);
         return result;
       }
       // If it already has base path, return as-is
