@@ -173,6 +173,28 @@ window.addEventListener('DOMContentLoaded', () => {
     return el;
   };
 
+  // Helper function to set asset src with error handling (must be defined before use)
+  const setAssetSrcWithErrorHandling = (element, url, name) => {
+    const assetURL = getAssetURL(url);
+    element.setAttribute('src', assetURL);
+    
+    // Log asset URLs on GitHub Pages for debugging
+    if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+      console.log(`[ASSET] Setting ${name}: ${assetURL}`);
+    }
+    
+    // Add error listener to detect failed loads
+    element.addEventListener('error', (e) => {
+      console.error(`[ASSET ERROR] Failed to load ${name}: ${assetURL}`, e);
+    });
+    
+    element.addEventListener('loaded', () => {
+      if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+        console.log(`[ASSET] Successfully loaded ${name}`);
+      }
+    });
+  };
+
   // Layers
   const base = makeLayer('cardBase', 0.000);
   const text = makeLayer('cardText', 0.001);
@@ -404,28 +426,6 @@ window.addEventListener('DOMContentLoaded', () => {
   aboutMeLayer.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-aboutme');
 
   // Apply textures (use getAssetURL at runtime to ensure correct base path)
-  // Add error handling for asset loading
-  const setAssetSrcWithErrorHandling = (element, url, name) => {
-    const assetURL = getAssetURL(url);
-    element.setAttribute('src', assetURL);
-    
-    // Log asset URLs on GitHub Pages for debugging
-    if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
-      console.log(`[ASSET] Setting ${name}: ${assetURL}`);
-    }
-    
-    // Add error listener to detect failed loads
-    element.addEventListener('error', (e) => {
-      console.error(`[ASSET ERROR] Failed to load ${name}: ${assetURL}`, e);
-    });
-    
-    element.addEventListener('loaded', () => {
-      if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
-        console.log(`[ASSET] Successfully loaded ${name}`);
-      }
-    });
-  };
-  
   setAssetSrcWithErrorHandling(base, cardBaseURLRaw_final, 'Card_Base.png');
   setAssetSrcWithErrorHandling(text, cardTextURLRaw_final, 'Card_Text.png');
   setAssetSrcWithErrorHandling(t1, tri1URLRaw_final, 'Triangles1.png');
