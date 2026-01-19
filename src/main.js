@@ -8,50 +8,72 @@ const getAssetURL = (url) => {
   if (!url) return url;
   
   // Get base path at runtime (from window or import.meta.env)
-  const runtimeBase = (typeof window !== 'undefined' && window.AR_BASE_PATH) 
+  let runtimeBase = (typeof window !== 'undefined' && window.AR_BASE_PATH) 
     ? window.AR_BASE_PATH 
     : (BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL);
   
-  // If URL already has protocol (http/https) or already includes base path, return as-is
-  if (url.startsWith('http') || url.includes('/webxr-digital-business-card/')) {
+  // Ensure base path is set correctly on GitHub Pages
+  if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+    // If AR_BASE_PATH is not set or empty, detect it from the current path
+    if (!runtimeBase || runtimeBase === '/' || runtimeBase === '') {
+      const path = window.location.pathname;
+      runtimeBase = path.replace(/\/index\.html$/, '').replace(/\/$/, '') || '/webxr-digital-business-card';
+      console.log(`[ASSET] Detected base path from URL: ${runtimeBase}`);
+    }
+    // Ensure it starts with / and doesn't end with /
+    if (!runtimeBase.startsWith('/')) runtimeBase = '/' + runtimeBase;
+    if (runtimeBase.endsWith('/')) runtimeBase = runtimeBase.slice(0, -1);
+  }
+  
+  // If URL already has protocol (http/https), check if it needs base path
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    // If it's a full URL but missing the base path on github.io, fix it
+    if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+      try {
+        const urlObj = new URL(url);
+        // If the pathname doesn't start with /webxr-digital-business-card/, add it
+        if (!urlObj.pathname.startsWith('/webxr-digital-business-card/')) {
+          const fixedPath = `/webxr-digital-business-card${urlObj.pathname}`;
+          const result = `${urlObj.origin}${fixedPath}${urlObj.search}${urlObj.hash}`;
+          console.log(`[ASSET FIX] ${url} -> ${result}`);
+          return result;
+        }
+      } catch (e) {
+        console.warn('[ASSET] Failed to parse URL:', url, e);
+      }
+    }
     return url;
   }
   
-  // Handle relative paths (starting with 'assets/' or just the filename)
-  if (url.startsWith('assets/')) {
-    const result = `${runtimeBase}/${url}`;
-    if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
-      console.log(`[ASSET] ${url} -> ${result}`);
-    }
-    return result;
+  // If URL already includes base path, return as-is
+  if (url.includes('/webxr-digital-business-card/')) {
+    return url;
   }
   
-  // Handle absolute paths starting with / (but without base path)
+  // Handle absolute paths starting with / (most common case from Vite builds)
+  // These need the base path prepended
   if (url.startsWith('/')) {
-    // If it starts with /assets, it needs the base path
-    if (url.startsWith('/assets/')) {
-      const result = `${runtimeBase}${url}`;
-      if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
-        console.log(`[ASSET] ${url} -> ${result}`);
-      }
-      return result;
-    }
-    // If it already has the base path, return as-is
-    if (url.startsWith('/webxr-digital-business-card/')) {
-      return url;
-    }
-    // Otherwise, prepend base path
     const result = `${runtimeBase}${url}`;
     if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
-      console.log(`[ASSET] ${url} -> ${result}`);
+      console.log(`[ASSET] Absolute path ${url} -> ${result}`);
     }
     return result;
   }
   
-  // Fallback: assume it needs base path
+  // Handle relative paths (starting with 'assets/' or just the filename)
+  // These also need the base path prepended
+  if (url.startsWith('assets/') || !url.includes('/')) {
+    const result = `${runtimeBase}/${url}`;
+    if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+      console.log(`[ASSET] Relative path ${url} -> ${result}`);
+    }
+    return result;
+  }
+  
+  // Fallback: prepend base path
   const result = `${runtimeBase}/${url}`;
   if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
-    console.log(`[ASSET] ${url} -> ${result}`);
+    console.log(`[ASSET] Fallback ${url} -> ${result}`);
   }
   return result;
 };
