@@ -64,12 +64,8 @@ import tri2URLRaw     from '/assets/Triangles2.png';
 import tri3URLRaw     from '/assets/Triangles3.png';
 import tri4URLRaw     from '/assets/Triangles4.png';
 import artURLRaw      from '/assets/Art.png';
-import aboutMeURLRaw  from '/assets/AboutMe.png';
-import wanS0URLRaw    from '/assets/WAN_S0.png';
-import wanS1URLRaw    from '/assets/WAN_S1.png';
-import wanS2URLRaw    from '/assets/WAN_S2.png';
-import wanS3URLRaw    from '/assets/WAN_S3.png';
-import wanS4URLRaw    from '/assets/WAN_S4.png';
+import aboutMeURLRaw  from '/assets/AboutMe.mp4';
+import wanInfoVideoURLRaw from '/assets/WAN_Info.mp4';
 import vendettaURLRaw from '/assets/Vendetta.png';
 import vendettaCubeURLRaw from '/assets/Vendetta_Cube.png';
 import vendettaVideoURLRaw from '/assets/Vendetta.mp4';
@@ -84,11 +80,7 @@ const tri3URLRaw_final = tri3URLRaw;
 const tri4URLRaw_final = tri4URLRaw;
 const artURLRaw_final = artURLRaw;
 const aboutMeURLRaw_final = aboutMeURLRaw;
-const wanS0URLRaw_final = wanS0URLRaw;
-const wanS1URLRaw_final = wanS1URLRaw;
-const wanS2URLRaw_final = wanS2URLRaw;
-const wanS3URLRaw_final = wanS3URLRaw;
-const wanS4URLRaw_final = wanS4URLRaw;
+const wanInfoVideoURLRaw_final = wanInfoVideoURLRaw;
 const vendettaURLRaw_final = vendettaURLRaw;
 const vendettaCubeURLRaw_final = vendettaCubeURLRaw;
 const vendettaVideoURLRaw_final = vendettaVideoURLRaw;
@@ -158,31 +150,113 @@ window.addEventListener('DOMContentLoaded', () => {
   artLayer.setAttribute('material', 'opacity:0');
   artLayer.setAttribute('src', getAssetURL(artURLRaw_final));
   
-  const aboutMeLayer = makeLayer('aboutMeLayer', 0.008);
-  aboutMeLayer.setAttribute('visible', false);
-  aboutMeLayer.setAttribute('material', 'opacity:0');
+  // AboutMe video element (replaced image with video)
+  // Video is vertical/portrait (9:16 aspect ratio), so adjust dimensions accordingly
+  // Use card height as base and calculate width to maintain 9:16 ratio
+  const aboutMeVideoHeight = FIT.height * 1.2; // Slightly taller than card
+  const aboutMeVideoWidth = aboutMeVideoHeight * (9 / 16); // Calculate width for 9:16 aspect ratio
+  const aboutMeLayer = document.createElement('a-video');
+  aboutMeLayer.setAttribute('id', 'aboutMeLayer');
   aboutMeLayer.setAttribute('src', getAssetURL(aboutMeURLRaw_final));
+  aboutMeLayer.setAttribute('width', String(aboutMeVideoWidth));
+  aboutMeLayer.setAttribute('height', String(aboutMeVideoHeight));
+  aboutMeLayer.setAttribute('position', `${FIT.x} ${FIT.y} 0.008`);
+  aboutMeLayer.setAttribute('material', 'transparent:true; alphaTest:0.01; side:double; opacity:0');
+  aboutMeLayer.setAttribute('visible', false);
+  aboutMeLayer.setAttribute('autoplay', false); // Will be controlled manually
+  aboutMeLayer.setAttribute('loop', false); // Don't loop the video
+  markerRoot.appendChild(aboutMeLayer);
   
-  // WAN Slide layers (5 slides: S0, S1, S2, S3, S4)
-  const wanSlides = [
-    makeLayer('wanSlide0', 0.009),
-    makeLayer('wanSlide1', 0.009),
-    makeLayer('wanSlide2', 0.009),
-    makeLayer('wanSlide3', 0.009),
-    makeLayer('wanSlide4', 0.009)
-  ];
+  // Helper function to get the HTML5 video element for AboutMe
+  const getAboutMeVideoElement = () => {
+    let videoEl = null;
+    
+    if (aboutMeLayer.components && aboutMeLayer.components.material) {
+      const material = aboutMeLayer.components.material.material;
+      if (material && material.map && material.map.image) {
+        videoEl = material.map.image;
+      }
+    }
+    
+    // Fallback: try to find video element in the scene
+    if (!videoEl || videoEl.tagName !== 'VIDEO') {
+      videoEl = document.querySelector('#aboutMeLayer video');
+    }
+    
+    return (videoEl && videoEl.tagName === 'VIDEO') ? videoEl : null;
+  };
   
-  wanSlides[0].setAttribute('src', getAssetURL(wanS0URLRaw_final));
-  wanSlides[1].setAttribute('src', getAssetURL(wanS1URLRaw_final));
-  wanSlides[2].setAttribute('src', getAssetURL(wanS2URLRaw_final));
-  wanSlides[3].setAttribute('src', getAssetURL(wanS3URLRaw_final));
-  wanSlides[4].setAttribute('src', getAssetURL(wanS4URLRaw_final));
+  // Set up video to play when it loads and becomes visible
+  aboutMeLayer.addEventListener('loadeddata', () => {
+    const videoEl = getAboutMeVideoElement();
+    if (videoEl) {
+      console.log('[ABOUTME] Video element ready');
+      // Explicitly set loop to false on the HTML5 video element
+      videoEl.loop = false;
+      // Add event listener to prevent looping when video ends
+      // Remove any existing listeners first to avoid duplicates
+      const endedHandler = () => {
+        console.log('[ABOUTME] Video ended, not looping');
+        videoEl.pause();
+        // Ensure loop is still false
+        videoEl.loop = false;
+      };
+      videoEl.removeEventListener('ended', endedHandler);
+      videoEl.addEventListener('ended', endedHandler);
+      // Video will be played when shown via show-aboutme event
+    }
+  });
   
-  wanSlides.forEach((slide, index) => {
-    slide.setAttribute('visible', false);
-    slide.setAttribute('material', 'opacity:0');
-    slide.setAttribute('animation__fadein', 'property: material.opacity; from: 0; to: 1; dur: 800; easing: easeInOutQuad; startEvents: show-wan-slide');
-    slide.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-wan-slide');
+  // WAN Info video element (replaced slides with single video)
+  const wanInfoVideo = document.createElement('a-video');
+  wanInfoVideo.setAttribute('id', 'wanInfoVideo');
+  wanInfoVideo.setAttribute('src', getAssetURL(wanInfoVideoURLRaw_final));
+  wanInfoVideo.setAttribute('width', String(FIT.width));
+  wanInfoVideo.setAttribute('height', String(FIT.height));
+  wanInfoVideo.setAttribute('position', `${FIT.x} ${FIT.y} 0.009`);
+  wanInfoVideo.setAttribute('material', 'transparent:true; alphaTest:0.01; side:double; opacity:0');
+  wanInfoVideo.setAttribute('visible', false);
+  wanInfoVideo.setAttribute('autoplay', false); // Will be controlled manually
+  wanInfoVideo.setAttribute('loop', false); // Don't loop the video
+  wanInfoVideo.setAttribute('animation__fadein', 'property: material.opacity; from: 0; to: 1; dur: 800; easing: easeInOutQuad; startEvents: show-wan-video');
+  wanInfoVideo.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-wan-video');
+  markerRoot.appendChild(wanInfoVideo);
+  
+  // Helper function to get the HTML5 video element for WAN Info
+  const getWANInfoVideoElement = () => {
+    let videoEl = null;
+    
+    if (wanInfoVideo.components && wanInfoVideo.components.material) {
+      const material = wanInfoVideo.components.material.material;
+      if (material && material.map && material.map.image) {
+        videoEl = material.map.image;
+      }
+    }
+    
+    // Fallback: try to find video element in the scene
+    if (!videoEl || videoEl.tagName !== 'VIDEO') {
+      videoEl = document.querySelector('#wanInfoVideo video');
+    }
+    
+    return (videoEl && videoEl.tagName === 'VIDEO') ? videoEl : null;
+  };
+  
+  // Set up video to play when it loads
+  wanInfoVideo.addEventListener('loadeddata', () => {
+    const videoEl = getWANInfoVideoElement();
+    if (videoEl) {
+      console.log('[WAN] Video element ready');
+      // Explicitly set loop to false on the HTML5 video element
+      videoEl.loop = false;
+      // Add event listener to prevent looping when video ends
+      const endedHandler = () => {
+        console.log('[WAN] Video ended, not looping');
+        videoEl.pause();
+        videoEl.loop = false;
+      };
+      videoEl.removeEventListener('ended', endedHandler);
+      videoEl.addEventListener('ended', endedHandler);
+    }
   });
   
   // Vendetta layer
@@ -210,9 +284,6 @@ window.addEventListener('DOMContentLoaded', () => {
   vendettaVideo.setAttribute('loop', false);
   markerRoot.appendChild(vendettaVideo);
   
-  // Track video playing state
-  let isVendettaVideoPlaying = false;
-  
   // Helper function to get the HTML5 video element
   const getVendettaVideoElement = () => {
     let videoEl = null;
@@ -232,27 +303,21 @@ window.addEventListener('DOMContentLoaded', () => {
     return (videoEl && videoEl.tagName === 'VIDEO') ? videoEl : null;
   };
   
-  // Get the actual HTML5 video element when it loads and set up event listeners
+  // Set up video to play when it loads (like WAN video)
   vendettaVideo.addEventListener('loadeddata', () => {
     const videoEl = getVendettaVideoElement();
     if (videoEl) {
       console.log('[VENDETTA] Video element ready');
-      
-      // Track video state changes
-      videoEl.addEventListener('play', () => {
-        isVendettaVideoPlaying = true;
-        updateVendettaPlayButton();
-      });
-      
-      videoEl.addEventListener('pause', () => {
-        isVendettaVideoPlaying = false;
-        updateVendettaPlayButton();
-      });
-      
-      videoEl.addEventListener('ended', () => {
-        isVendettaVideoPlaying = false;
-        updateVendettaPlayButton();
-      });
+      // Explicitly set loop to false on the HTML5 video element
+      videoEl.loop = false;
+      // Add event listener to prevent looping when video ends
+      const endedHandler = () => {
+        console.log('[VENDETTA] Video ended, not looping');
+        videoEl.pause();
+        videoEl.loop = false;
+      };
+      videoEl.removeEventListener('ended', endedHandler);
+      videoEl.addEventListener('ended', endedHandler);
     }
   });
   
@@ -488,22 +553,26 @@ window.addEventListener('DOMContentLoaded', () => {
     // Hide cube when target lost
     cube.setAttribute('visible', false);
     
-    // Hide and reset About Me layers (Art, AboutMe)
+    // Hide and reset About Me layers (Art, AboutMe video)
     artLayer.setAttribute('visible', false);
     artLayer.setAttribute('material', 'opacity:0');
     aboutMeLayer.setAttribute('visible', false);
     aboutMeLayer.setAttribute('material', 'opacity:0');
-    
-    // Hide and reset WAN slides
-    wanSlides.forEach(slide => {
-      slide.setAttribute('visible', false);
-      slide.setAttribute('material', 'opacity:0');
-    });
-    const wanNav = document.getElementById('wan-nav-container');
-    if (wanNav) {
-      wanNav.style.display = 'none';
+    // Pause video when hidden
+    const aboutMeVideoEl = getAboutMeVideoElement();
+    if (aboutMeVideoEl) {
+      aboutMeVideoEl.pause();
+      aboutMeVideoEl.currentTime = 0;
     }
-    currentWANSlide = 0;
+    
+    // Hide and reset WAN video
+    wanInfoVideo.setAttribute('visible', false);
+    wanInfoVideo.setAttribute('material', 'opacity:0');
+    const wanVideoEl = getWANInfoVideoElement();
+    if (wanVideoEl) {
+      wanVideoEl.pause();
+      wanVideoEl.currentTime = 0;
+    }
     
     // Hide and reset Vendetta content
     vendettaLayer.setAttribute('visible', false);
@@ -515,13 +584,6 @@ window.addEventListener('DOMContentLoaded', () => {
       if (videoEl) {
         videoEl.pause();
         videoEl.currentTime = 0;
-        isVendettaVideoPlaying = false;
-      }
-      
-      // Hide video controls
-      const controlsContainer = document.getElementById('vendetta-video-controls');
-      if (controlsContainer) {
-        controlsContainer.style.display = 'none';
       }
     
     // Reset page state to home
@@ -690,10 +752,6 @@ END:VCARD`;
     }
   };
   
-  // ---------- WAN Slide Viewer ----------
-  let currentWANSlide = 0;
-  const totalWANSlides = 5;
-  
   // ---------- Page Transition Functions ----------
   const showHomePage = () => {
     console.log('[PAGE] Showing home page');
@@ -702,7 +760,12 @@ END:VCARD`;
     // Hide all other content
     artLayer.emit('hide-art');
     aboutMeLayer.emit('hide-aboutme');
-    wanSlides.forEach(slide => slide.emit('hide-wan-slide'));
+    wanInfoVideo.emit('hide-wan-video');
+    const wanVideoEl = getWANInfoVideoElement();
+    if (wanVideoEl) {
+      wanVideoEl.pause();
+      wanVideoEl.currentTime = 0;
+    }
     vendettaLayer.emit('hide-vendetta');
     vendettaVideo.emit('hide-vendetta-video');
     
@@ -711,14 +774,9 @@ END:VCARD`;
     if (videoEl) {
       videoEl.pause();
       videoEl.currentTime = 0;
-      isVendettaVideoPlaying = false;
     }
     
-    // Hide WAN navigation
-    const wanNav = document.getElementById('wan-nav-container');
-    if (wanNav) {
-      wanNav.style.display = 'none';
-    }
+    // WAN video is handled in individual page transitions
     
     // After fade out, show home elements
     setTimeout(() => {
@@ -727,10 +785,19 @@ END:VCARD`;
       artLayer.setAttribute('material', 'opacity:0');
       aboutMeLayer.setAttribute('visible', false);
       aboutMeLayer.setAttribute('material', 'opacity:0');
-      wanSlides.forEach(slide => {
-        slide.setAttribute('visible', false);
-        slide.setAttribute('material', 'opacity:0');
-      });
+      // Pause AboutMe video when returning to home
+      const aboutMeVideoEl = getAboutMeVideoElement();
+      if (aboutMeVideoEl) {
+        aboutMeVideoEl.pause();
+        aboutMeVideoEl.currentTime = 0;
+      }
+      wanInfoVideo.setAttribute('visible', false);
+      wanInfoVideo.setAttribute('material', 'opacity:0');
+      const wanVideoEl2 = getWANInfoVideoElement();
+      if (wanVideoEl2) {
+        wanVideoEl2.pause();
+        wanVideoEl2.currentTime = 0;
+      }
       vendettaLayer.setAttribute('visible', false);
       vendettaLayer.setAttribute('material', 'opacity:0');
       vendettaVideo.setAttribute('visible', false);
@@ -768,39 +835,50 @@ END:VCARD`;
       if (videoEl) {
         videoEl.pause();
         videoEl.currentTime = 0;
-        isVendettaVideoPlaying = false;
       }
     } else if (previousPage === PAGE_STATE.WAN) {
-      // Coming from WAN: fade out WAN slides
-      wanSlides.forEach(slide => slide.emit('hide-wan-slide'));
-      const wanNav = document.getElementById('wan-nav-container');
-      if (wanNav) {
-        wanNav.style.display = 'none';
+      // Coming from WAN: fade out WAN video
+      wanInfoVideo.emit('hide-wan-video');
+      const wanVideoEl8 = getWANInfoVideoElement();
+      if (wanVideoEl8) {
+        wanVideoEl8.pause();
+        wanVideoEl8.currentTime = 0;
       }
     } else {
-      // Coming from home: fade out text and triangles
+      // Coming from home: fade out text, triangles, and base
       [t1, t2, t3, t4].forEach(el => el.emit('pulse-stop'));
       text.emit('hide-text');
+      base.emit('hide-text'); // Fade out base as well
       [t1, t2, t3, t4].forEach(el => el.emit('hide-triangles'));
     }
     
-    // Ensure base stays visible
-    base.setAttribute('visible', true);
-    base.setAttribute('material', 'opacity:1');
-    
-    // After fade out, show About Me content
+    // After fade out, show only About Me video (no Art.png, no Card_Base.png)
     setTimeout(() => {
-      // Hide previous content
+      // Hide all previous content including base and art
+      base.setAttribute('visible', false);
+      base.setAttribute('material', 'opacity:0');
+      artLayer.setAttribute('visible', false);
+      artLayer.setAttribute('material', 'opacity:0');
+      
       if (previousPage === PAGE_STATE.VENDETTA) {
         vendettaLayer.setAttribute('visible', false);
         vendettaLayer.setAttribute('material', 'opacity:0');
         vendettaVideo.setAttribute('visible', false);
         vendettaVideo.setAttribute('material', 'opacity:0');
+        // Pause Vendetta video
+        const videoEl = getVendettaVideoElement();
+        if (videoEl) {
+          videoEl.pause();
+          videoEl.currentTime = 0;
+        }
       } else if (previousPage === PAGE_STATE.WAN) {
-        wanSlides.forEach(slide => {
-          slide.setAttribute('visible', false);
-          slide.setAttribute('material', 'opacity:0');
-        });
+        wanInfoVideo.setAttribute('visible', false);
+        wanInfoVideo.setAttribute('material', 'opacity:0');
+        const wanVideoEl7 = getWANInfoVideoElement();
+        if (wanVideoEl7) {
+          wanVideoEl7.pause();
+          wanVideoEl7.currentTime = 0;
+        }
       } else {
         text.setAttribute('visible', false);
         [t1, t2, t3, t4].forEach(el => {
@@ -809,18 +887,39 @@ END:VCARD`;
         });
       }
       
-      // Show Art.png first
-      artLayer.setAttribute('visible', true);
-      artLayer.setAttribute('material', 'opacity:0');
-      artLayer.emit('show-art');
+      // Show only AboutMe.mp4 video (no Art.png, no Card_Base.png)
+      aboutMeLayer.setAttribute('visible', true);
+      aboutMeLayer.setAttribute('material', 'opacity:0');
+      aboutMeLayer.emit('show-aboutme');
       
-      // Then show AboutMe.png after Art fades in
+      // Ensure video plays when shown - wait for fade-in to start, then play
       setTimeout(() => {
-        aboutMeLayer.setAttribute('visible', true);
-        aboutMeLayer.setAttribute('material', 'opacity:0');
-        aboutMeLayer.emit('show-aboutme');
-        console.log('[PAGE] About Me page displayed');
-      }, 800);
+        const aboutMeVideoEl = getAboutMeVideoElement();
+        if (aboutMeVideoEl) {
+          // Explicitly disable looping on the HTML5 video element
+          aboutMeVideoEl.loop = false;
+          aboutMeVideoEl.currentTime = 0; // Reset to beginning
+          aboutMeVideoEl.play().catch(err => {
+            console.warn('[ABOUTME] Video autoplay prevented, user interaction required:', err);
+          });
+          console.log('[ABOUTME] Video playback started (loop disabled)');
+        } else {
+          // If video element not found yet, try again after a short delay
+          setTimeout(() => {
+            const videoEl = getAboutMeVideoElement();
+            if (videoEl) {
+              // Explicitly disable looping on the HTML5 video element
+              videoEl.loop = false;
+              videoEl.currentTime = 0; // Reset to beginning
+              videoEl.play().catch(err => {
+                console.warn('[ABOUTME] Video autoplay prevented (retry):', err);
+              });
+            }
+          }, 200);
+        }
+      }, 100);
+      
+      console.log('[PAGE] About Me page displayed with video only');
       
       // Reset cube rotation
       cubeController.resetRotation();
@@ -845,7 +944,6 @@ END:VCARD`;
       if (videoEl) {
         videoEl.pause();
         videoEl.currentTime = 0;
-        isVendettaVideoPlaying = false;
       }
     } else {
       // Coming from home: fade out text and triangles
@@ -880,26 +978,43 @@ END:VCARD`;
         });
       }
       
-      // Hide base (WAN slides replace everything)
+      // Hide base (WAN video replaces everything)
       base.setAttribute('visible', false);
       base.setAttribute('material', 'opacity:0');
       
-      // Show first WAN slide
-      wanSlides.forEach(slide => {
-        slide.setAttribute('visible', false);
-        slide.setAttribute('material', 'opacity:0');
-      });
+      // Show WAN Info video
+      wanInfoVideo.setAttribute('visible', true);
+      wanInfoVideo.setAttribute('material', 'opacity:0');
+      wanInfoVideo.emit('show-wan-video');
       
-      currentWANSlide = 0;
-      wanSlides[0].setAttribute('visible', true);
-      wanSlides[0].setAttribute('material', 'opacity:0');
-      wanSlides[0].emit('show-wan-slide');
+      // Ensure video plays when shown - wait for fade-in to start, then play
+      setTimeout(() => {
+        const wanVideoEl = getWANInfoVideoElement();
+        if (wanVideoEl) {
+          // Explicitly disable looping on the HTML5 video element
+          wanVideoEl.loop = false;
+          wanVideoEl.currentTime = 0; // Reset to beginning
+          wanVideoEl.play().catch(err => {
+            console.warn('[WAN] Video autoplay prevented, user interaction required:', err);
+          });
+          console.log('[WAN] Video playback started (loop disabled)');
+        } else {
+          // If video element not found yet, try again after a short delay
+          setTimeout(() => {
+            const videoEl = getWANInfoVideoElement();
+            if (videoEl) {
+              // Explicitly disable looping on the HTML5 video element
+              videoEl.loop = false;
+              videoEl.currentTime = 0; // Reset to beginning
+              videoEl.play().catch(err => {
+                console.warn('[WAN] Video autoplay prevented (retry):', err);
+              });
+            }
+          }, 200);
+        }
+      }, 100);
       
-      // Create navigation buttons if they don't exist
-      createWANNavigation();
-      updateWANNavButtons();
-      
-      console.log('[PAGE] WAN presentation displayed');
+      console.log('[PAGE] WAN presentation displayed with video');
     }, 900);
   };
   
@@ -914,11 +1029,12 @@ END:VCARD`;
       artLayer.emit('hide-art');
       aboutMeLayer.emit('hide-aboutme');
     } else if (previousPage === PAGE_STATE.WAN) {
-      // Coming from WAN: fade out WAN slides
-      wanSlides.forEach(slide => slide.emit('hide-wan-slide'));
-      const wanNav = document.getElementById('wan-nav-container');
-      if (wanNav) {
-        wanNav.style.display = 'none';
+      // Coming from WAN: fade out WAN video
+      wanInfoVideo.emit('hide-wan-video');
+      const wanVideoEl = getWANInfoVideoElement();
+      if (wanVideoEl) {
+        wanVideoEl.pause();
+        wanVideoEl.currentTime = 0;
       }
     } else {
       // Coming from home: fade out text and triangles
@@ -941,10 +1057,13 @@ END:VCARD`;
         aboutMeLayer.setAttribute('visible', false);
         aboutMeLayer.setAttribute('material', 'opacity:0');
       } else if (previousPage === PAGE_STATE.WAN) {
-        wanSlides.forEach(slide => {
-          slide.setAttribute('visible', false);
-          slide.setAttribute('material', 'opacity:0');
-        });
+        wanInfoVideo.setAttribute('visible', false);
+        wanInfoVideo.setAttribute('material', 'opacity:0');
+        const wanVideoEl6 = getWANInfoVideoElement();
+        if (wanVideoEl6) {
+          wanVideoEl6.pause();
+          wanVideoEl6.currentTime = 0;
+        }
       } else {
         text.setAttribute('visible', false);
         [t1, t2, t3, t4].forEach(el => {
@@ -968,8 +1087,32 @@ END:VCARD`;
         vendettaVideo.setAttribute('material', 'opacity:0');
         vendettaVideo.emit('show-vendetta-video');
         
-        // Create video controls if they don't exist
-        createVendettaVideoControls();
+        // Ensure video plays when shown - wait for fade-in to start, then play
+        setTimeout(() => {
+          const vendettaVideoEl = getVendettaVideoElement();
+          if (vendettaVideoEl) {
+            // Explicitly disable looping on the HTML5 video element
+            vendettaVideoEl.loop = false;
+            vendettaVideoEl.currentTime = 0; // Reset to beginning
+            vendettaVideoEl.play().catch(err => {
+              console.warn('[VENDETTA] Video autoplay prevented, user interaction required:', err);
+            });
+            console.log('[VENDETTA] Video playback started (loop disabled)');
+          } else {
+            // If video element not found yet, try again after a short delay
+            setTimeout(() => {
+              const videoEl = getVendettaVideoElement();
+              if (videoEl) {
+                // Explicitly disable looping on the HTML5 video element
+                videoEl.loop = false;
+                videoEl.currentTime = 0; // Reset to beginning
+                videoEl.play().catch(err => {
+                  console.warn('[VENDETTA] Video autoplay prevented (retry):', err);
+                });
+              }
+            }, 200);
+          }
+        }, 100);
         
         console.log('[PAGE] Vendetta presentation displayed with video');
       }, 800);
@@ -978,79 +1121,8 @@ END:VCARD`;
     }, 900);
   };
   
-  const createVendettaVideoControls = () => {
-    let controlsContainer = document.getElementById('vendetta-video-controls');
-    
-    if (!controlsContainer) {
-      controlsContainer = document.createElement('div');
-      controlsContainer.id = 'vendetta-video-controls';
-      controlsContainer.className = 'wan-navigation'; // Reuse WAN navigation styles (positioned on right side)
-      // Keep default WAN navigation positioning (right side, vertical)
-      
-      // Play/Pause button
-      const playPauseBtn = document.createElement('button');
-      playPauseBtn.className = 'wan-nav-btn vendetta-play-pause';
-      playPauseBtn.innerHTML = '▶';
-      playPauseBtn.addEventListener('click', () => {
-        toggleVendettaVideo();
-      });
-      controlsContainer.appendChild(playPauseBtn);
-      
-      // Close button
-      const closeBtn = document.createElement('button');
-      closeBtn.className = 'wan-nav-btn wan-nav-close';
-      closeBtn.innerHTML = '✕';
-      closeBtn.addEventListener('click', () => {
-        closeVendettaPresentation();
-      });
-      controlsContainer.appendChild(closeBtn);
-      
-      document.body.appendChild(controlsContainer);
-      console.log('[VENDETTA] Video controls created');
-    }
-    
-    controlsContainer.style.display = 'flex';
-    updateVendettaPlayButton();
-  };
-  
-  const toggleVendettaVideo = () => {
-    const videoEl = getVendettaVideoElement();
-    
-    if (!videoEl) {
-      console.warn('[VENDETTA] Video element not found');
-      return;
-    }
-    
-    if (isVendettaVideoPlaying) {
-      videoEl.pause();
-      isVendettaVideoPlaying = false;
-      console.log('[VENDETTA] Video paused');
-    } else {
-      videoEl.play().catch(err => {
-        console.error('[VENDETTA] Error playing video:', err);
-      });
-      isVendettaVideoPlaying = true;
-      console.log('[VENDETTA] Video playing');
-    }
-    
-    updateVendettaPlayButton();
-  };
-  
-  const updateVendettaPlayButton = () => {
-    const playPauseBtn = document.querySelector('.vendetta-play-pause');
-    if (playPauseBtn) {
-      playPauseBtn.innerHTML = isVendettaVideoPlaying ? '⏸' : '▶';
-    }
-  };
-  
   const closeVendettaPresentation = () => {
     console.log('[VENDETTA] Closing Vendetta presentation, returning to home');
-    
-    // Hide video controls
-    const controlsContainer = document.getElementById('vendetta-video-controls');
-    if (controlsContainer) {
-      controlsContainer.style.display = 'none';
-    }
     
     // Fade out Vendetta content
     vendettaLayer.emit('hide-vendetta');
@@ -1061,7 +1133,6 @@ END:VCARD`;
     if (videoEl) {
       videoEl.pause();
       videoEl.currentTime = 0; // Reset to beginning
-      isVendettaVideoPlaying = false;
     }
     
     // After fade out, restore home page
@@ -1079,112 +1150,23 @@ END:VCARD`;
     }, 800);
   };
   
-  // Define helper functions BEFORE createWANNavigation so they're available when event listeners are created
-  const goToWANSlide = (slideIndex) => {
-    if (slideIndex < 0 || slideIndex >= totalWANSlides) return;
-    
-    // Fade out current slide
-    wanSlides[currentWANSlide].emit('hide-wan-slide');
-    
-    setTimeout(() => {
-      wanSlides[currentWANSlide].setAttribute('visible', false);
-      currentWANSlide = slideIndex;
-      wanSlides[currentWANSlide].setAttribute('visible', true);
-      wanSlides[currentWANSlide].setAttribute('material', 'opacity:0');
-      wanSlides[currentWANSlide].emit('show-wan-slide');
-      updateWANIndicator();
-      updateWANNavButtons();
-      console.log(`[WAN] Switched to slide ${slideIndex + 1}`);
-    }, 400);
-  };
-  
-  const updateWANIndicator = () => {
-    const indicator = document.getElementById('wan-slide-indicator');
-    if (indicator) {
-      indicator.textContent = `${currentWANSlide + 1} / ${totalWANSlides}`;
-    }
-  };
-  
-  const updateWANNavButtons = () => {
-    const prevBtn = document.querySelector('.wan-nav-prev');
-    const nextBtn = document.querySelector('.wan-nav-next');
-    if (prevBtn) prevBtn.disabled = currentWANSlide === 0;
-    if (nextBtn) nextBtn.disabled = currentWANSlide === totalWANSlides - 1;
-  };
-  
-  const createWANNavigation = () => {
-    let navContainer = document.getElementById('wan-nav-container');
-    
-    if (!navContainer) {
-      navContainer = document.createElement('div');
-      navContainer.id = 'wan-nav-container';
-      navContainer.className = 'wan-navigation';
-      
-      // Previous button
-      const prevBtn = document.createElement('button');
-      prevBtn.className = 'wan-nav-btn wan-nav-prev';
-      prevBtn.innerHTML = '◀';
-      prevBtn.addEventListener('click', () => {
-        if (currentWANSlide > 0) {
-          goToWANSlide(currentWANSlide - 1);
-        }
-      });
-      navContainer.appendChild(prevBtn);
-      
-      // Slide indicator
-      const indicator = document.createElement('div');
-      indicator.id = 'wan-slide-indicator';
-      indicator.className = 'wan-slide-indicator';
-      navContainer.appendChild(indicator);
-      
-      // Next button
-      const nextBtn = document.createElement('button');
-      nextBtn.className = 'wan-nav-btn wan-nav-next';
-      nextBtn.innerHTML = '▶';
-      nextBtn.addEventListener('click', () => {
-        if (currentWANSlide < totalWANSlides - 1) {
-          goToWANSlide(currentWANSlide + 1);
-        }
-      });
-      navContainer.appendChild(nextBtn);
-      
-      // Close button
-      const closeBtn = document.createElement('button');
-      closeBtn.className = 'wan-nav-btn wan-nav-close';
-      closeBtn.innerHTML = '✕';
-      closeBtn.addEventListener('click', () => {
-        closeWANPresentation();
-      });
-      navContainer.appendChild(closeBtn);
-      
-      // Add navigation to body as DOM overlay (not A-Frame entity)
-      document.body.appendChild(navContainer);
-      updateWANIndicator();
-    }
-    
-    navContainer.style.display = 'flex';
-  };
-  
   const closeWANPresentation = () => {
     console.log('[WAN] Closing WAN presentation, returning to home');
     
-    // Hide navigation
-    const navContainer = document.getElementById('wan-nav-container');
-    if (navContainer) {
-      navContainer.style.display = 'none';
-    }
+    // Fade out WAN video
+    wanInfoVideo.emit('hide-wan-video');
     
-    // Fade out all slides
-    wanSlides.forEach(slide => {
-      slide.emit('hide-wan-slide');
-    });
+    // Pause video
+    const wanVideoEl = getWANInfoVideoElement();
+    if (wanVideoEl) {
+      wanVideoEl.pause();
+      wanVideoEl.currentTime = 0;
+    }
     
     // After fade out, restore home page
     setTimeout(() => {
-      wanSlides.forEach(slide => {
-        slide.setAttribute('visible', false);
-        slide.setAttribute('material', 'opacity:0');
-      });
+      wanInfoVideo.setAttribute('visible', false);
+      wanInfoVideo.setAttribute('material', 'opacity:0');
       
       // Restore home page elements
       showHomePage();
@@ -1227,11 +1209,10 @@ END:VCARD`;
         subButtonsContainer.id = 'sub-buttons-container';
         subButtonsContainer.className = 'sub-buttons';
         
-        // Create 3 sub-buttons
+        // Create 2 sub-buttons (removed WebXR)
         const projects = [
           { id: 'project-wan', label: 'WAN' },
-          { id: 'project-vendetta', label: 'Vendetta' },
-          { id: 'project-webxr', label: 'WebXR' }
+          { id: 'project-vendetta', label: 'Vendetta' }
         ];
         
         projects.forEach(project => {
