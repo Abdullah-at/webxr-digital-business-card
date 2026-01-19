@@ -148,7 +148,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const artLayer = makeLayer('artLayer', 0.007);
   artLayer.setAttribute('visible', false);
   artLayer.setAttribute('material', 'opacity:0');
-  artLayer.setAttribute('src', getAssetURL(artURLRaw_final));
+  setAssetSrcWithErrorHandling(artLayer, artURLRaw_final, 'Art.png');
   
   // AboutMe video element (replaced image with video)
   // Video is vertical/portrait (9:16 aspect ratio), so adjust dimensions accordingly
@@ -157,7 +157,18 @@ window.addEventListener('DOMContentLoaded', () => {
   const aboutMeVideoWidth = aboutMeVideoHeight * (9 / 16); // Calculate width for 9:16 aspect ratio
   const aboutMeLayer = document.createElement('a-video');
   aboutMeLayer.setAttribute('id', 'aboutMeLayer');
-  aboutMeLayer.setAttribute('src', getAssetURL(aboutMeURLRaw_final));
+  const aboutMeVideoURL = getAssetURL(aboutMeURLRaw_final);
+  aboutMeLayer.setAttribute('src', aboutMeVideoURL);
+  
+  // Log video URL on GitHub Pages
+  if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+    console.log(`[VIDEO] AboutMe video URL: ${aboutMeVideoURL}`);
+  }
+  
+  // Add error handling for video
+  aboutMeLayer.addEventListener('error', (e) => {
+    console.error('[VIDEO ERROR] AboutMe video failed to load:', aboutMeVideoURL, e);
+  });
   aboutMeLayer.setAttribute('width', String(aboutMeVideoWidth));
   aboutMeLayer.setAttribute('height', String(aboutMeVideoHeight));
   aboutMeLayer.setAttribute('position', `${FIT.x} ${FIT.y} 0.008`);
@@ -210,7 +221,19 @@ window.addEventListener('DOMContentLoaded', () => {
   // WAN Info video element (replaced slides with single video)
   const wanInfoVideo = document.createElement('a-video');
   wanInfoVideo.setAttribute('id', 'wanInfoVideo');
-  wanInfoVideo.setAttribute('src', getAssetURL(wanInfoVideoURLRaw_final));
+  const wanInfoVideoURL = getAssetURL(wanInfoVideoURLRaw_final);
+  wanInfoVideo.setAttribute('src', wanInfoVideoURL);
+  
+  // Log video URL on GitHub Pages
+  if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+    console.log(`[VIDEO] WAN Info video URL: ${wanInfoVideoURL}`);
+  }
+  
+  // Add error handling for video
+  wanInfoVideo.addEventListener('error', (e) => {
+    console.error('[VIDEO ERROR] WAN Info video failed to load:', wanInfoVideoURL, e);
+  });
+  
   wanInfoVideo.setAttribute('width', String(FIT.width));
   wanInfoVideo.setAttribute('height', String(FIT.height));
   wanInfoVideo.setAttribute('position', `${FIT.x} ${FIT.y} 0.009`);
@@ -263,14 +286,25 @@ window.addEventListener('DOMContentLoaded', () => {
   const vendettaLayer = makeLayer('vendettaLayer', 0.009);
   vendettaLayer.setAttribute('visible', false);
   vendettaLayer.setAttribute('material', 'opacity:0');
-  vendettaLayer.setAttribute('src', getAssetURL(vendettaURLRaw_final));
+  setAssetSrcWithErrorHandling(vendettaLayer, vendettaURLRaw_final, 'Vendetta.png');
   vendettaLayer.setAttribute('animation__fadein', 'property: material.opacity; from: 0; to: 1; dur: 800; easing: easeInOutQuad; startEvents: show-vendetta');
   vendettaLayer.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-vendetta');
   
   // Vendetta video element (positioned at bottom center of Vendetta.png, in front)
   const vendettaVideo = document.createElement('a-video');
   vendettaVideo.setAttribute('id', 'vendettaVideo');
-  vendettaVideo.setAttribute('src', getAssetURL(vendettaVideoURLRaw_final));
+  const vendettaVideoURL = getAssetURL(vendettaVideoURLRaw_final);
+  vendettaVideo.setAttribute('src', vendettaVideoURL);
+  
+  // Log video URL on GitHub Pages
+  if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+    console.log(`[VIDEO] Vendetta video URL: ${vendettaVideoURL}`);
+  }
+  
+  // Add error handling for video
+  vendettaVideo.addEventListener('error', (e) => {
+    console.error('[VIDEO ERROR] Vendetta video failed to load:', vendettaVideoURL, e);
+  });
   vendettaVideo.setAttribute('width', '1.2');
   vendettaVideo.setAttribute('height', '0.66'); // 16:9 aspect ratio
   // Position: bottom center, z=0.010 (in front of Vendetta layer at 0.009), y adjusted to align bottom with Vendetta.png
@@ -329,12 +363,34 @@ window.addEventListener('DOMContentLoaded', () => {
   aboutMeLayer.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-aboutme');
 
   // Apply textures (use getAssetURL at runtime to ensure correct base path)
-  base.setAttribute('src', getAssetURL(cardBaseURLRaw_final));
-  text.setAttribute('src', getAssetURL(cardTextURLRaw_final));
-  t1.setAttribute('src',   getAssetURL(tri1URLRaw_final));
-  t2.setAttribute('src',   getAssetURL(tri2URLRaw_final));
-  t3.setAttribute('src',   getAssetURL(tri3URLRaw_final));
-  t4.setAttribute('src',   getAssetURL(tri4URLRaw_final));
+  // Add error handling for asset loading
+  const setAssetSrcWithErrorHandling = (element, url, name) => {
+    const assetURL = getAssetURL(url);
+    element.setAttribute('src', assetURL);
+    
+    // Log asset URLs on GitHub Pages for debugging
+    if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+      console.log(`[ASSET] Setting ${name}: ${assetURL}`);
+    }
+    
+    // Add error listener to detect failed loads
+    element.addEventListener('error', (e) => {
+      console.error(`[ASSET ERROR] Failed to load ${name}: ${assetURL}`, e);
+    });
+    
+    element.addEventListener('loaded', () => {
+      if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+        console.log(`[ASSET] Successfully loaded ${name}`);
+      }
+    });
+  };
+  
+  setAssetSrcWithErrorHandling(base, cardBaseURLRaw_final, 'Card_Base.png');
+  setAssetSrcWithErrorHandling(text, cardTextURLRaw_final, 'Card_Text.png');
+  setAssetSrcWithErrorHandling(t1, tri1URLRaw_final, 'Triangles1.png');
+  setAssetSrcWithErrorHandling(t2, tri2URLRaw_final, 'Triangles2.png');
+  setAssetSrcWithErrorHandling(t3, tri3URLRaw_final, 'Triangles3.png');
+  setAssetSrcWithErrorHandling(t4, tri4URLRaw_final, 'Triangles4.png');
   
   // Add fade out animation for base layer
   base.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 800; easing: easeInOutQuad; startEvents: hide-text');
@@ -484,6 +540,8 @@ window.addEventListener('DOMContentLoaded', () => {
   let aboutMeTimers = []; // Store About Me animation timers to clear on reset
 
   const startSequence = () => {
+    console.log('[SEQUENCE] Starting sequence - target found!');
+    
     // Hide the card and cube at first
     [base,text,t1,t2,t3,t4].forEach(el => el.setAttribute('visible', false));
     cube.setAttribute('visible', false);
@@ -503,12 +561,21 @@ window.addEventListener('DOMContentLoaded', () => {
         // Unpause and ensure one-shot
         const current = ufo.getAttribute('animation-mixer') || '';
         ufo.setAttribute('animation-mixer', `${current}; timeScale: 1; loop: once; repetitions: 1; clampWhenFinished: true`);
+        console.log('[SEQUENCE] UFO animation started');
+      } else {
+        console.warn('[SEQUENCE] UFO mixer not found');
       }
     };
-    if (ufoLoaded) play(); else ufo.addEventListener('model-loaded', play, { once: true });
+    if (ufoLoaded) {
+      play();
+    } else {
+      console.log('[SEQUENCE] Waiting for UFO model to load...');
+      ufo.addEventListener('model-loaded', play, { once: true });
+    }
 
     // After 6 seconds, show the card layers, cube, and start triangle pulses
     setTimeout(() => {
+      console.log('[SEQUENCE] Showing card layers after 6 seconds');
       [base,text,t1,t2,t3,t4].forEach(el => el.setAttribute('visible', true));
       text.setAttribute('material', 'opacity:1');
       [t1,t2,t3,t4].forEach(el => el.emit('pulse-start'));
@@ -516,6 +583,7 @@ window.addEventListener('DOMContentLoaded', () => {
       
       // Show interactive cube
       cube.setAttribute('visible', true);
+      console.log('[SEQUENCE] Card layers and cube visible');
     }, 6000);
     
     // Show HUD buttons after 8 seconds (after target detection)
@@ -523,7 +591,9 @@ window.addEventListener('DOMContentLoaded', () => {
       const hud = document.getElementById('hud');
       if (hud) {
         hud.classList.add('active');
-        console.log('[HUD] Buttons shown after 8 seconds');
+        console.log('[SEQUENCE] HUD buttons shown after 8 seconds');
+      } else {
+        console.warn('[SEQUENCE] HUD element not found!');
       }
     }, 8000);
   };
@@ -611,8 +681,14 @@ window.addEventListener('DOMContentLoaded', () => {
     console.log('[RESET] All layers and content reset when target lost');
   };
 
-  markerRoot.addEventListener('targetFound', startSequence);
-  markerRoot.addEventListener('targetLost',  stopSequence);
+  markerRoot.addEventListener('targetFound', () => {
+    console.log('[MINDAR] Target found event fired!');
+    startSequence();
+  });
+  markerRoot.addEventListener('targetLost', () => {
+    console.log('[MINDAR] Target lost event fired!');
+    stopSequence();
+  });
 
   // ---------- Page State Management ----------
   const PAGE_STATE = {
